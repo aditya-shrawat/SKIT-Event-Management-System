@@ -1,8 +1,36 @@
 import React from 'react'
+import {createBrowserRouter, RouterProvider} from 'react-router-dom'
+import Layout from './Components/Layout'
+import Home from './Pages/Home'
+import ErrorPage from './Pages/ErrorPage'
+import RegisteredEvents from './Pages/RegisteredEvents'
+import EventDetailPage from './Pages/EventDetailPage'
+import MyEvents from './Pages/MyEvents'
+
+const router = createBrowserRouter([
+  {
+    path:"/",
+    element: (
+      <Layout />
+    ),
+    children:[
+      {path:'/', element: <Home /> },
+      {path:'/myEvents', element: <MyEvents /> },
+      {path:'/registered', element: <RegisteredEvents /> },
+      {path:'/event/:id', element: <EventDetailPage /> },
+    ]
+  },
+  // { path:'/signin', element:<SignInPage /> },
+  // { path:'/signup', element:<SignupPage /> },
+  {
+    path:'*',
+    element:<ErrorPage />
+  }
+])
 
 const App = () => {
   return (
-    <div className='bg-red-500 font-medium text-xl '>SKIT-EventPortal</div>
+    <RouterProvider router={router} />
   )
 }
 
