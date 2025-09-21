@@ -4,8 +4,11 @@ import { FaFireAlt } from "react-icons/fa";
 import { BsFillClipboard2CheckFill } from "react-icons/bs";
 import { MdAdd } from "react-icons/md";
 import { Link } from "react-router-dom";
+import { useUser } from "@/Context/UserContext.jsx";
 
 const Header = () => {
+  const {user} = useUser();
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-300 bg-white/95 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-4">
@@ -53,8 +56,8 @@ const Header = () => {
           }
 
           <div className="relative">
-            <button className="h-8 w-8 rounded-full border-none bg-gray-400 text-white font-semibold cursor-pointer">
-              P
+            <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
+              {user && user.name.charAt(0).toUpperCase()}
             </button>
           </div>
 

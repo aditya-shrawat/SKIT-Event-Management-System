@@ -6,6 +6,7 @@ import ErrorPage from './Pages/ErrorPage'
 import RegisteredEvents from './Pages/RegisteredEvents'
 import EventDetailPage from './Pages/EventDetailPage'
 import MyEvents from './Pages/MyEvents'
+import SignupPage from './Pages/SignupPage'
 
 const router = createBrowserRouter([
   {
@@ -21,7 +22,7 @@ const router = createBrowserRouter([
     ]
   },
   // { path:'/signin', element:<SignInPage /> },
-  // { path:'/signup', element:<SignupPage /> },
+  { path:'/signup', element:<SignupPage /> },
   {
     path:'*',
     element:<ErrorPage />
