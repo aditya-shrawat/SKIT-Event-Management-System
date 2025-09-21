@@ -30,3 +30,36 @@ export const handleSignUp =async (req,res)=>{
         return res.status(500).json({error:`something went wrong,try again later.`})
     }
 }
+
+
+export const handleSignin = async (req,res)=>{
+    const {email,password} = req.body ;
+
+    try {
+        if(!email || !password){
+            return res.status(400).json({message:"Enter email or password"})
+        }
+
+        const user = await User.findOne({email}) ;
+
+        if(!user){
+            return res.status(400).json({message:"User doesn't exist"})
+        }
+
+        const passwordMatched = await bcrypt.compare(password,user.password) ;
+
+        if(passwordMatched){
+            const token = createToken(user) ;
+
+            return res.status(200).cookie('token',token,{
+                httpOnly: true,
+                secure: true,sameSite: "None",
+            }).json({message:"signin successfully"}) ;
+        }
+        else{
+            return res.status(400).json({message:"Incorrect password"})
+        }
+    } catch (error) {
+        return res.status(500).json({error:`something went wrong - ${error}`})
+    }
+}

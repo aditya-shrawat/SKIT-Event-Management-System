@@ -17,6 +17,7 @@ export const UserProvider = ({children}) => {
                 const response = await axios.get(`${BackendURL}/api/user-info`, { withCredentials: true });
 
                 setUser(response.data.user)
+                console.log("User fetched successfully",response.data.user);
             } catch (error) {
                 console.error("User fetch error", error);
             }
