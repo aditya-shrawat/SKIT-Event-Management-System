@@ -1,3 +1,4 @@
+import { useUser } from "@/Context/UserContext";
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -93,6 +94,7 @@ const events = [
 
 
 const EventDetailPage = () => {
+  const {user} = useUser();
   const params = useParams();
   const navigate = useNavigate();
   const eventId = params.id;
@@ -250,15 +252,39 @@ const EventDetailPage = () => {
             </div>
 
             {/* Registration Button */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <p className="text-gray-600 leading-relaxed text-center mb-6">
-                Join the excitement. <br /> Register and connect with peers!
-              </p>
+            {
+              (user && user.role==='student') ? (
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <p className="text-gray-600 leading-relaxed text-center mb-6">
+                    Join the excitement. <br /> Register and connect with peers!
+                  </p>
 
-              <button className="primary-button w-full py-3 px-6">
-                Register for Event
-              </button>
-            </div>
+                  <button className="primary-button w-full py-3 px-6">
+                    Register for Event
+                  </button>
+                </div>
+              ) : 
+              (user && user.role==='admin') ?(
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <p className="text-gray-600 leading-relaxed text-center mb-6">
+                    Track event performance. <br /> View insightful analytics and make informed decisions.
+                  </p>
+                  <button className="primary-button w-full py-3 px-6">
+                    Analytics
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <p className="text-gray-600 leading-relaxed text-center mb-6">
+                    Join the excitement. <br /> Sign Up and register for the event.
+                  </p>
+
+                  <button className="primary-button w-full py-3 px-6">
+                    Sign up
+                  </button>
+                </div>
+              )
+            }
           </div>
         </div>
       </div>

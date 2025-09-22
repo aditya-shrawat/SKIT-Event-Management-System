@@ -1,3 +1,4 @@
+import { useUser } from '@/Context/UserContext';
 import React from 'react'
 import { Link } from 'react-router-dom'
 
@@ -15,6 +16,7 @@ function EventCard({
   organizer,
   registrationStatus,
 }) {
+  const {user} = useUser();
 
   return (
     <Link to={`/event/${id}`} className="rounded-xl shadow-md overflow-hidden transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-xl">
@@ -59,16 +61,32 @@ function EventCard({
           </div>
         </div>
 
-        <div className="flex justify-between items-center">
-          {registrationStatus ? (
-            <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
-              {registrationStatus}
-            </button>
-          ) : (
-            <button className="primary-button px-4 py-2 text-sm">
-              Register Now
-            </button>
-          )}
+        <div className={`flex ${(user) ? `justify-between`:`flex-row-reverse`} items-center`}>
+          {
+            (user && user.role==='student') && (
+              <div>
+                {registrationStatus ? (
+                  <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
+                    {registrationStatus}
+                  </button>
+                ) : (
+                  <button className="primary-button px-4 py-2 text-sm">
+                    Register Now
+                  </button>
+                )}
+              </div>
+            )
+          }
+
+          {
+            (user && user.role==='admin') && (
+              <div>
+                <button className="primary-button px-4 py-2 text-sm">
+                  Analytics
+                </button>
+              </div>
+            )
+          }
 
           <button className="p-2 bg-transparent border border-gray-300 rounded-md cursor-pointer text-base hover:bg-gray-50 transition-colors">
             ❤️

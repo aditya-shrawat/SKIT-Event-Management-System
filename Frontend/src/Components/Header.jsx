@@ -5,6 +5,9 @@ import { BsFillClipboard2CheckFill } from "react-icons/bs";
 import { MdAdd } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useUser } from "@/Context/UserContext.jsx";
+import { MdEventAvailable } from "react-icons/md";
+import { LuMessagesSquare } from "react-icons/lu";
+import { LuMessageSquareText } from "react-icons/lu";
 
 const Header = () => {
   const {user} = useUser();
@@ -21,7 +24,7 @@ const Header = () => {
             <span className="text-xl font-bold text-[#A94442]">SKIT-EMS</span>
           </Link>
 
-          {
+          { user &&
             <div className="flex items-center gap-6">
               <Link to="/" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
                 <div className="text-lg">
@@ -30,36 +33,79 @@ const Header = () => {
                 <span>Home</span>
               </Link>
 
-              <Link to="/myEvents" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
-                <div className="text-lg">
-                  <FaFireAlt />
-                </div>
-                <span>My Events</span>
-              </Link>
-
-              <Link to="/registered" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
-                <div className="text-lg">
-                  <BsFillClipboard2CheckFill />
-                </div>
-                <span>Registered</span>
-              </Link>
-
-              <div>
-                <button className="flex items-center gap-2 px-3 py-1.5 bg-[#00A1A1]/10 text-[#00A1A1] border-none rounded-lg cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/18 transition-colors">
-                  <div className="text-2xl">
-                    <MdAdd />
+              {/* Teacher/admin nav */}
+              {
+                (user && user.role==="admin") &&
+                <Link to="/myEvents" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                  <div className="text-lg">
+                    <MdEventAvailable className="text-xl" />
                   </div>
-                  Create
-                </button>
-              </div>
+                  <span>My Events</span>
+                </Link>
+              }
+              {
+                (user && user.role==="admin") &&
+                <div className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                  <div className="text-lg">
+                    <LuMessageSquareText />
+                  </div>
+                  <span>Requests</span>
+                </div>
+              }
+
+              {/* Student nav */}
+              {
+                (user && user.role==="student") &&
+                <Link to="/popular" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                  <div className="text-lg">
+                    <FaFireAlt />
+                  </div>
+                  <span>Popular</span>
+                </Link>
+              }
+              {
+                (user && user.role==="student") &&
+                <Link to="/registered" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                  <div className="text-lg">
+                    <BsFillClipboard2CheckFill />
+                  </div>
+                  <span>Registered</span>
+                </Link>
+              }
+
+                <div>
+                  <button className="flex items-center gap-2 px-3 py-1.5 bg-[#00A1A1]/10 text-[#00A1A1] border-none rounded-lg cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/18 transition-colors">
+                    <div className="text-2xl">
+                      <MdAdd />
+                    </div>
+                    Create
+                  </button>
+                </div>
             </div>
           }
 
-          <div className="relative">
-            <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
-              {user && user.name.charAt(0).toUpperCase()}
-            </button>
-          </div>
+          {
+            user ? (
+            <div className="relative">
+              <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
+                {user && user.name.charAt(0).toUpperCase()}
+              </button>
+            </div> )
+            : (
+              <div className="flex items-center gap-4">
+                <div className="hidden sm:block">
+                  <Link to={'/signin'} className="px-3 py-1 text-[#00A1A1] border-2 border-[#00A1A1] rounded-md cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/10 transition-colors">
+                    Sign In
+                  </Link>
+                </div>
+                <div>
+                  <Link to={'/signup'} className="primary-button px-3 py-1.5 text-sm">
+                    Sign Up
+                  </Link>
+                </div>
+              </div>
+            )
+          }
 
         </div>
       </div>

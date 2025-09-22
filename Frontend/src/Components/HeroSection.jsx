@@ -1,5 +1,8 @@
+import { useUser } from "@/Context/UserContext";
 import React from "react";
 import { IoSearchSharp } from "react-icons/io5";
+import { Link } from "react-router-dom";
+import { FaArrowRight } from "react-icons/fa";
 
 const floatingImages = [
   {
@@ -47,6 +50,9 @@ const floatingImages = [
 ];
 
 const HeroSection = () => {
+  const {user} = useUser();
+
+
   return (
     <section className="overflow-hidden h-[100vh] text-center text-white bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative py-36 px-4">
       {/* Floating images */}
@@ -91,12 +97,13 @@ const HeroSection = () => {
         </div>
 
         <h1 className="font-bold mb-3 leading-tight text-gray-800 text-4xl sm:text-5xl">
-          Discover Amazing Events
+          {user?.role === 'admin' ? 'Organize Amazing Events' : 'Discover Amazing Events'}
         </h1>
 
         <p className="mb-8 text-gray-400 max-w-xl mx-auto text-base md:text-lg">
-          Participate in competitions, workshops, cultural events, and create
-          unforgettable memories with your fellow students.
+          {user?.role === 'admin'
+            ? 'Organize competitions, workshops, cultural events, and create unforgettable experiences for your students.'
+            : 'Participate in competitions, workshops, cultural events, and create unforgettable memories with your fellow students.'}
         </p>
 
         {/* Search container */}
@@ -113,19 +120,31 @@ const HeroSection = () => {
         </div>
 
         {/* Action buttons */}
-        <div className="flex justify-center gap-4 mt-8 flex-wrap">
-          <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
-            <span className="text-sm font-medium text-gray-600">
-              🎯 Browse All Events
-            </span>
-          </div>
+        {user ? (
+          <div className="flex justify-center gap-4 mt-8 flex-wrap">
+            <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+              <span className="text-sm font-medium text-gray-600">
+                🎯 Browse All Events
+              </span>
+            </div>
 
-          <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
-            <span className="text-sm font-medium text-gray-600">
-              ➕ Create Event
-            </span>
-          </div>
-        </div>
+            <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+              <span className="text-sm font-medium text-gray-600">
+                ➕ Create Event
+              </span>
+            </div>
+          </div>)
+        : (
+          <Link to="/signup" className="inline-block mt-8">
+            <button className="px-4 py-2 bg-white/60 backdrop-blur-sm text-sm font-medium text-gray-600 rounded-full border border-white/20 shadow-sm transition-all duration-300 cursor-pointer group flex items-center justify-center">
+              Get started
+              <div className="ml-3 w-fit h-fit group-hover:translate-x-1 transition-transform">
+                <FaArrowRight />
+              </div>
+            </button>
+          </Link>
+          )
+        }
       </div>
     </section>
   );

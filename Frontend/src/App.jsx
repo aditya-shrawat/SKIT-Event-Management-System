@@ -8,6 +8,7 @@ import EventDetailPage from './Pages/EventDetailPage'
 import MyEvents from './Pages/MyEvents'
 import SignupPage from './Pages/SignupPage'
 import SigninPage from './Pages/SigninPage'
+import PopularEventsPage from './Pages/PopularEventsPage'
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
     children:[
       {path:'/', element: <Home /> },
       {path:'/myEvents', element: <MyEvents /> },
+      {path:'/popular', element: <PopularEventsPage /> },
       {path:'/registered', element: <RegisteredEvents /> },
       {path:'/event/:id', element: <EventDetailPage /> },
     ]
