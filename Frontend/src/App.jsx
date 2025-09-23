@@ -9,6 +9,7 @@ import MyEvents from './Pages/MyEvents'
 import SignupPage from './Pages/SignupPage'
 import SigninPage from './Pages/SigninPage'
 import PopularEventsPage from './Pages/PopularEventsPage'
+import CreateEventPage from './Pages/CreateEventPage'
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       {path:'/popular', element: <PopularEventsPage /> },
       {path:'/registered', element: <RegisteredEvents /> },
       {path:'/event/:id', element: <EventDetailPage /> },
+      {path:'/create-event', element: <CreateEventPage /> },
     ]
   },
   { path:'/signin', element:<SigninPage /> },

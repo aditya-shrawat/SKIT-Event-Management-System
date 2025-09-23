@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { HiMiniHome } from "react-icons/hi2";
 import { FaFireAlt } from "react-icons/fa";
 import { BsFillClipboard2CheckFill } from "react-icons/bs";
@@ -8,9 +8,22 @@ import { useUser } from "@/Context/UserContext.jsx";
 import { MdEventAvailable } from "react-icons/md";
 import { LuMessagesSquare } from "react-icons/lu";
 import { LuMessageSquareText } from "react-icons/lu";
+import { cleanupNotificationListener, registerUserSocket, setupNotificationListener } from "@/Socket/socketService";
+import socket from "@/Socket/socket";
 
 const Header = () => {
   const {user} = useUser();
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    registerUserSocket(socket,user._id);
+    setupNotificationListener(socket);
+
+    return () => {
+      cleanupNotificationListener(socket);
+    };
+  },[user]);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-gray-300 bg-white/95 backdrop-blur-sm">
@@ -74,12 +87,12 @@ const Header = () => {
               }
 
                 <div>
-                  <button className="flex items-center gap-2 px-3 py-1.5 bg-[#00A1A1]/10 text-[#00A1A1] border-none rounded-lg cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/18 transition-colors">
+                  <Link to={'/create-event'} className="flex items-center gap-2 px-3 py-1.5 bg-[#00A1A1]/10 text-[#00A1A1] border-none rounded-lg cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/18 transition-colors">
                     <div className="text-2xl">
                       <MdAdd />
                     </div>
                     Create
-                  </button>
+                  </Link>
                 </div>
             </div>
           }

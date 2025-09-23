@@ -8,6 +8,7 @@ export const createToken = (user)=>{
         _id:user._id,
         name: user.name,
         branch: user.branch,
+        role:user.role,
     }
 
     const token = jwt.sign(payLoad,secretKey,{expiresIn: "7d"});
