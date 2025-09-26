@@ -10,6 +10,8 @@ import { checkTokenAuthentication } from './middleware/authMiddleware.js';
 import eventRoutes from './routes/eventRoutes.js'
 import searchRoutes from './routes/search.js'
 import { Server } from 'socket.io';
+import notificationRoutes from './routes/notificationRoutes.js'
+import { eventSocketHandler } from './sockets/eventSocketHandler.js';
 
 
 dotenv.config();
@@ -42,6 +44,8 @@ io.on('connection', (socket) => {
     socket.join(`user_${userId}`);
   });
 
+  eventSocketHandler(io,socket);
+
   socket.on('disconnect', ()=>{
     console.log(`Socket disconnected: ${socket.id}`);
   });
@@ -58,6 +62,7 @@ app.get("/api/user-info",checkTokenAuthentication,fetchUserInfo);
 app.use('/user',userAuthRoutes) ;
 app.use('/search',searchRoutes);
 app.use('/api/event',eventRoutes);
+app.use('/api/notification',notificationRoutes);
 
 
 

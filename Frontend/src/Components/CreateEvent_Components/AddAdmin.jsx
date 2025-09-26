@@ -147,7 +147,7 @@ const UserItem = ({ user, onSelect, disabled }) => {
     >
       <div className="mr-3">
         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-lg text-white flex justify-center items-center overflow-hidden">
-          {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+          {user.name && user.name.charAt(0).toUpperCase()}
         </div>
       </div>
       <div className="w-full h-auto">

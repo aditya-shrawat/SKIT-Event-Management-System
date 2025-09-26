@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { HiMiniHome } from "react-icons/hi2";
 import { FaFireAlt } from "react-icons/fa";
 import { BsFillClipboard2CheckFill } from "react-icons/bs";
@@ -10,9 +10,12 @@ import { LuMessagesSquare } from "react-icons/lu";
 import { LuMessageSquareText } from "react-icons/lu";
 import { cleanupNotificationListener, registerUserSocket, setupNotificationListener } from "@/Socket/socketService";
 import socket from "@/Socket/socket";
+import { FaBell } from "react-icons/fa";
+import Notifications from "./Notifications";
 
 const Header = () => {
   const {user} = useUser();
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
   useEffect(() => {
     if (!user?._id) return;
@@ -26,8 +29,9 @@ const Header = () => {
   },[user]);
 
   return (
+    <>
     <nav className="sticky top-0 z-50 w-full border-b border-gray-300 bg-white/95 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="w-full px-6">
         <div className="flex h-16 items-center justify-between">
 
           <Link to="/" className="flex items-center outline-none border-none gap-1">
@@ -99,11 +103,17 @@ const Header = () => {
 
           {
             user ? (
-            <div className="relative">
-              <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
-                {user && user.name.charAt(0).toUpperCase()}
-              </button>
-            </div> )
+              <div className="flex items-center gap-4">
+                <div onClick={()=>{setIsNotificationsOpen(true)}} className="relative p-2 text-xl text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer">
+                  <FaBell />
+                </div>
+                <div className="relative">
+                  <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
+                    {user && user.name.charAt(0).toUpperCase()}
+                  </button>
+                </div>
+              </div>
+            )
             : (
               <div className="flex items-center gap-4">
                 <div className="hidden sm:block">
@@ -123,6 +133,12 @@ const Header = () => {
         </div>
       </div>
     </nav>
+
+    {
+      (isNotificationsOpen) &&
+        <Notifications setIsNotificationsOpen={setIsNotificationsOpen}  />
+    }
+    </>
   );
 };
 

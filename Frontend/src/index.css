@@ -7,6 +7,10 @@
   .primary-button{
     @apply bg-gradient-to-r from-[#00bebe] to-[#00A1A1] hover:from-[#00A1A1] hover:to-[#00A1A1] text-white font-semibold rounded-md shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer outline-none border-none
   }
+
+  .outline-button{
+    @apply text-gray-700 rounded-md font-semibold border-[1px] border-gray-300 hover:bg-gray-100 outline-none cursor-pointer transition-all duration-300 
+  }
 }
 
 /* Added floating animation keyframes for modern floating effect  ( HERO SECTION ) */
