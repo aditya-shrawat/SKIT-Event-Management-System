@@ -1,4 +1,5 @@
 import Event from "../models/eventModel.js";
+import Feedback from "../models/feedbackModel.js";
 import Notification from "../models/notificationModel.js";
 import Registration from "../models/registrationModel.js";
 import User from "../models/userModel.js";
@@ -210,6 +211,59 @@ export const registrationStatusOfEvent = async (req, res) => {
     return res.status(200).json({ status: "not-registered", message: "You have not registered for this event." });
   } catch (error) {
     console.log("Error while checking event registration status - ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const toggleLikeEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+
+    if (!eventId) return res.status(400).json({ error: "Event ID is required." });
+
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ error: "Event not found." });
+
+    const existing = await Feedback.findOne({ eventId, userId });
+
+    if (existing && existing.reaction === "like") {
+        await Feedback.deleteOne({ _id: existing._id });
+        return res.status(200).json({ message: "Like removed.", isLiked: false });
+    } 
+    else {
+        const feedback = await Feedback.findOneAndUpdate(
+            { eventId, userId },
+            { reaction: "like" },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+        return res.status(200).json({ message: "Event liked.", isLiked: true });
+    }
+  } catch (error) {
+    console.log("Error in toggling like - ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const getFeedbackStatus = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+
+    if (!eventId) return res.status(400).json({ error: "Event ID is required." });
+
+    const event = await Event.findById(eventId);
+    if (!event) return res.status(404).json({ error: "Event not found." });
+
+    const feedback = await Feedback.findOne({ eventId, userId });
+
+    return res.status(200).json({
+      isLiked: !!(feedback && feedback.reaction === "like"),
+    });
+  } catch (error) {
+    console.log("Error while fetching feedback status - ", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };

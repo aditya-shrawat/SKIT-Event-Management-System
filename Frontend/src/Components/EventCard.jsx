@@ -47,10 +47,39 @@ function EventCard({
     }
   }
 
+  const fetchLikeStatus = async ()=>{
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/${_id}/feedback/status`,
+        {withCredentials:true});
+
+      if(response.data && response.data.isLiked){
+        setLikeStatus(response.data.isLiked) ;
+      }
+    } catch (error) {
+      console.log("Error in fetching like status :- ",error) ;
+    }
+  }
+
   useEffect(()=>{
     if(!user) return;
     getRegistrationStatus() ;
+    fetchLikeStatus() ;
   },[user]) ;
+
+
+  const toggleLikeEvent = async () => {
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.post(`${BackendURL}/api/event/${_id}/feedback`, {}, { withCredentials: true });
+
+      if (response.data && typeof response.data.isLiked === "boolean") {
+        setLikeStatus(response.data.isLiked);  // set true or false always
+      }
+    } catch (error) {
+      console.log("Error in toggling like status :- ", error);
+    }
+  };
 
 
 
@@ -140,15 +169,17 @@ function EventCard({
         )}
 
         {user && (
-          likeStatus ? (
-            <button className="absolute right-5 bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400 hover:bg-gray-200 transition-colors">
-              <AiFillLike />
-            </button>
-          ) : (
-            <button className="absolute right-5 bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl hover:bg-gray-200 transition-colors">
-              <AiOutlineLike />
-            </button>
-          )
+          <div onClick={toggleLikeEvent} className="absolute right-5 bottom-5">
+            {likeStatus ? (
+              <button className="p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400 hover:bg-gray-200">
+                <AiFillLike />
+              </button>
+            ) : (
+              <button className="bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl hover:bg-gray-200">
+                <AiOutlineLike />
+              </button>
+            )}
+          </div>
         )}
 
     </div>
