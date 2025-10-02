@@ -1,148 +1,123 @@
+import RegistrationModal from "@/Components/RegistrationModal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/Components/ui/popover";
 import { useUser } from "@/Context/UserContext";
-import React from "react";
+import axios from "axios";
+import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-
-// Mock SKIT college event data (same as in main page)
-const events = [
-  {
-    id: "1",
-    title: "SKIT Tech Fest 2024",
-    description:
-      "Annual technical festival featuring coding competitions, robotics, and innovation showcases by SKIT students.",
-    date: "March 15, 2024",
-    time: "9:00 AM - 6:00 PM",
-    location: "SKIT Main Auditorium",
-    attendees: 245,
-    maxAttendees: 500,
-    category: "Technical",
-    image: "/dummyImage.webp",
-    organizer: "Computer Science Department",
-  },
-  {
-    id: "2",
-    title: "Cultural Night - Rangmanch",
-    description:
-      "Celebrate diversity with dance, music, drama performances by talented SKIT students from all departments.",
-    date: "March 18, 2024",
-    time: "6:00 PM - 10:00 PM",
-    location: "SKIT Open Ground",
-    attendees: 380,
-    maxAttendees: 600,
-    category: "Cultural",
-    image: "/dummyImage.webp",
-    organizer: "Cultural Committee",
-  },
-  {
-    id: "3",
-    title: "SKIT Sports Championship",
-    description:
-      "Inter-department sports competition including cricket, football, basketball, and indoor games.",
-    date: "March 22, 2024",
-    time: "8:00 AM - 6:00 PM",
-    location: "SKIT Sports Complex",
-    attendees: 450,
-    maxAttendees: 800,
-    category: "Sports",
-    image: "/dummyImage.webp",
-    organizer: "Sports Committee",
-  },
-  {
-    id: "4",
-    title: "Entrepreneurship Summit",
-    description:
-      "Learn from successful alumni entrepreneurs and participate in startup pitch competitions.",
-    date: "March 25, 2024",
-    time: "10:00 AM - 4:00 PM",
-    location: "SKIT Conference Hall",
-    attendees: 89,
-    maxAttendees: 150,
-    category: "Workshop",
-    image: "/dummyImage.webp",
-    organizer: "E-Cell SKIT",
-  },
-  {
-    id: "5",
-    title: "Photography Workshop",
-    description:
-      "Master photography techniques with professional equipment and learn from industry experts.",
-    date: "March 28, 2024",
-    time: "2:00 PM - 5:00 PM",
-    location: "SKIT Media Lab",
-    attendees: 25,
-    maxAttendees: 30,
-    category: "Workshop",
-    image: "/dummyImage.webp",
-    organizer: "Photography Club",
-  },
-  {
-    id: "6",
-    title: "Blood Donation Camp",
-    description:
-      "Annual blood donation drive organized by NSS SKIT. Help save lives by donating blood.",
-    date: "March 30, 2024",
-    time: "9:00 AM - 3:00 PM",
-    location: "SKIT Medical Room",
-    attendees: 120,
-    maxAttendees: 200,
-    category: "Social",
-    image: "/dummyImage.webp",
-    organizer: "NSS SKIT",
-  },
-];
-
+import { IoIosArrowForward } from "react-icons/io";
+import { Skeleton } from "@/Components/ui/skeleton";
 
 
 const EventDetailPage = () => {
   const {user} = useUser();
   const params = useParams();
-  const navigate = useNavigate();
   const eventId = params.id;
+  const [event,setEvent] = useState(null);
+  const [registrationStatus, setRegistrationStatus] = useState(false);
+  const [loading,setLoading] = useState(true);
+  const [isRegistrationOpen,setIsRegistrationOpen] = useState(false);
 
-  const event = events.find((e) => e.id === eventId);
+  const [formattedDate,setFormattedDate] = useState("DD MMM, YYYY");
+  const [formattedStartTime,setFormattedStartTime]  = useState("00:00");
+  const [formattedEndTime,setFormattedEndTime]  = useState("00:00");
 
-  if (!event) {
-    return (
-      <div className="min-h-screen">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-800 mb-6">
-              Event Not Found
-            </h1>
-            <button
-              onClick={() => navigate(-1)}
-              className="primary-button px-6 py-3"
-            >
-              Back to Events
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  // fetching event details
+  const fetchEventDetail = async ()=>{
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/${eventId}/details`,{withCredentials:true});
+
+      setEvent(response.data.event);
+    } catch (error) {
+      console.log("Error while fetching event details - ",error)
+    }
+    finally{
+      setLoading(false)
+    }
   }
 
+  const getRegistrationStatus = async ()=>{
+    if(user && user.role !== "student") return ;
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/${eventId}/registration/status`,
+        {withCredentials:true});
+
+      if(response.data && response.data.status){
+        setRegistrationStatus(response.data.status) ;
+      }
+    } catch (error) {
+      console.log("Error in fetching registration status :- ",error) ;
+    }
+  }
+
+  useEffect(()=>{
+    if(!eventId) return;
+    fetchEventDetail();
+  },[eventId])
+
+  useEffect(()=>{
+    if(!eventId || !user) return;
+    getRegistrationStatus() ;
+  },[eventId,user])
+
+
+  useEffect(()=>{
+    if(event){
+      setFormattedDate( dayjs(event.eventDate).format("DD MMM, YYYY") );
+      // Attached a dummy date so dayjs can parse correctly
+      setFormattedStartTime( dayjs(`1970-01-01T${event.eventStartTime}`).format("h:mm A") );
+      setFormattedEndTime( dayjs(`1970-01-01T${event.eventEndTime}`).format("h:mm A") );
+    }
+  },[event,user])
+
   return (
+    <div className="relative">
+    
+    {
+    (loading) ?
+      <div className="min-h-screen w-full">
+         <div className="h-96 w-full">
+           <Skeleton className="h-full w-full" />
+         </div>
+         <div className="w-full px-5 py-12">
+            <div className="w-full max-w-7xl mx-auto">
+              <div className="flex flex-col lg:flex-row lg:justify-between gap-6 w-full">
+                <div className="h-64 sm:h-80 lg:h-auto flex-1">
+                  <Skeleton className="w-full h-full" />
+                </div>
+                <div className="flex flex-col gap-6 w-full lg:w-[40%]">
+                  <Skeleton className="h-48 sm:h-56 w-full" />
+                  <Skeleton className="h-40 sm:h-56 w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+      </div>
+    :
     <div className="min-h-screen">
       {/* Hero Section with Event Image */}
       <div className="relative h-96">
         <div className="absolute inset-0 bg-black/25"></div>
-        <img
-          src={event.image || "/placeholder.svg"}
-          alt={event.title}
-          className="w-full h-full object-cover mix-blend-overlay"
-        />
+          {(event) && 
+            <img src={event.image!=="" ? event.image : "/dummyImage.webp"} 
+                className="w-full h-full object-cover mix-blend-overlay"/>
+          }
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <div className="inline-block px-3 py-1 bg-gradient-to-r from-[#00bebe] to-[#00A1A1] text-white rounded-md text-sm font-medium mb-4">
-              {event.category}
+          {event && 
+            <div className="text-center text-white px-4">
+              <div className="inline-block px-3 py-1 bg-gradient-to-r from-[#00bebe] to-[#00A1A1] text-white rounded-md text-sm font-medium mb-4">
+                {event.category}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                {event.name}
+              </h1>
+              <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                {event.shortDescription}
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              {event.title}
-            </h1>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
-              {event.description}
-            </p>
-          </div>
+          }
         </div>
       </div>
 
@@ -157,7 +132,7 @@ const EventDetailPage = () => {
                 Event Details
               </h2>
 
-              <div className="space-y-6">
+              {/* <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">
                     About This Event
@@ -204,7 +179,14 @@ const EventDetailPage = () => {
                     be provided.
                   </p>
                 </div>
-              </div>
+              </div> */}
+
+              {event && 
+                <div
+                  className="space-y-6"
+                  dangerouslySetInnerHTML={{ __html: event.details }}
+                />
+              }
             </div>
           </div>
 
@@ -221,7 +203,7 @@ const EventDetailPage = () => {
                   <span className="mr-3 mt-1">📅</span>
                   <div>
                     <p className="font-medium text-gray-800">Date</p>
-                    <p className="text-gray-600 text-sm">{event.date}</p>
+                    <p className="text-gray-600 text-sm">{formattedDate}</p>
                   </div>
                 </div>
 
@@ -229,15 +211,15 @@ const EventDetailPage = () => {
                   <span className="mr-3 mt-1">🕒</span>
                   <div>
                     <p className="font-medium text-gray-800">Time</p>
-                    <p className="text-gray-600 text-sm">{event.time}</p>
+                    <p className="text-gray-600 text-sm">{`${formattedStartTime} - ${formattedEndTime}`}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
                   <span className="mr-3 mt-1">📍</span>
                   <div>
-                    <p className="font-medium text-gray-800">Location</p>
-                    <p className="text-gray-600 text-sm">{event.location}</p>
+                    <p className="font-medium text-gray-800">Venue</p>
+                    {event && <p className="text-gray-600 text-sm">{event.venue}</p>}
                   </div>
                 </div>
 
@@ -245,26 +227,112 @@ const EventDetailPage = () => {
                   <span className="mr-3 mt-1">👥</span>
                   <div>
                     <p className="font-medium text-gray-800">Organizer</p>
-                    <p className="text-gray-600 text-sm">{event.organizer}</p>
+                    {event && <p className="text-gray-600 text-sm">{`${event.club} club`}</p>}
                   </div>
                 </div>
+
+                {/* faculty cordinatior */}
+                <Popover>
+                  <PopoverTrigger className="w-full">
+                    <div className="flex items-start cursor-pointer">
+                      <span className="mr-3 mt-1">🧑‍💼</span>
+                      <div className="w-full flex justify-between items-center">
+                        <div className="flex flex-col items-start">
+                          <p className="font-medium text-gray-800">Faculty Cordinator (Admin)</p>
+                          {event && <p className="text-gray-600 text-sm">{event.adminId.name}</p>}
+                        </div>
+                        <span><IoIosArrowForward /></span>
+                      </div>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <div className="w-64 md:w-80 p-3">
+                      <div>
+                        <p className="font-medium text-gray-800">Faculty Cordinator (Admin)</p>
+                        <div className="flex items-center mt-2">
+                          {/* Avatar with first letter of name */}
+                          <div className="mr-3">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-white flex justify-center items-center overflow-hidden">
+                              {event.adminId.name ? event.adminId.name.charAt(0).toUpperCase() : "U"}
+                            </div>
+                          </div>
+                          {/* Name + Branch */}
+                          <div className="w-full h-auto">
+                            <h2 className="font-semibold text-gray-700">{event.adminId.name}</h2>
+                            <p className="text-xs text-gray-500">{event.adminId.branch}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+
+                {/* Sub admin (student cordinatior) section  */}
+                { (event && event.confirmedSubAdmins) &&
+                <Popover>
+                  <PopoverTrigger className="w-full">
+                    <div className="flex items-center w-full py-1 cursor-pointer">
+                      <span className="mr-3 mt-1">🧑‍🤝‍🧑</span>
+                      <div className="w-full flex justify-between items-center">
+                        <p className="font-medium text-gray-800">Student Cordinators</p>
+                        <span><IoIosArrowForward/></span>
+                      </div>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <p className="font-medium text-gray-800 px-3 pt-2">Student Cordinators</p>
+                    <div className="w-64 md:w-80 p-2">
+                      {event.confirmedSubAdmins?.map((user, index) => (
+                        <div
+                          key={user._id || index}
+                          className="px-2 py-1 text-gray-600 text-sm flex items-center whitespace-nowrap"
+                        >
+                          <div className="flex items-center">
+                            {/* Avatar with first letter of name */}
+                            <div className="mr-3">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-white flex justify-center items-center overflow-hidden">
+                                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                              </div>
+                            </div>
+                            {/* Name + Branch */}
+                            <div className="w-full h-auto">
+                              <h2 className="font-semibold text-gray-700">{user.name}</h2>
+                              <p className="text-xs text-gray-500">{user.branch}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                }
+
               </div>
             </div>
 
             {/* Registration Button */}
             {
-              (user && user.role==='student') ? (
+              (user && (user.role === "student" && registrationStatus !=='Sub-admin'))? (
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <p className="text-gray-600 leading-relaxed text-center mb-6">
                     Join the excitement. <br /> Register and connect with peers!
                   </p>
 
-                  <button className="primary-button w-full py-3 px-6">
-                    Register for Event
-                  </button>
+                  {(registrationStatus === 'Registered' || registrationStatus === 'Waitlist' || registrationStatus === 'Cancelled' ) ? 
+                    (<button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
+                        {registrationStatus}
+                      </button>) 
+                    : 
+                    registrationStatus === 'not-registered' ? 
+                    (<button onClick={()=>{setIsRegistrationOpen(true)}} className="primary-button w-full py-3 px-6">
+                        Register for Event
+                      </button>)
+                    :
+                    null
+                  }
                 </div>
               ) : 
-              (user && user.role==='admin') ?(
+              (user && (user.role === "admin" || registrationStatus ==='Sub-admin')) ?(
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                   <p className="text-gray-600 leading-relaxed text-center mb-6">
                     Track event performance. <br /> View insightful analytics and make informed decisions.
@@ -289,6 +357,15 @@ const EventDetailPage = () => {
         </div>
       </div>
       </div>
+    </div>
+    }
+
+    { (isRegistrationOpen) &&
+      <RegistrationModal
+        event={{ _id:event._id, name: event.name, club: event.club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: event.image, venue: event.venue }}
+        onClose={() => setIsRegistrationOpen(false)}
+      />
+    }
     </div>
   );
 };

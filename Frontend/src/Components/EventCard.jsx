@@ -1,100 +1,166 @@
-import { useUser } from '@/Context/UserContext';
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { useUser } from "@/Context/UserContext";
+import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import RegistrationModal from "./RegistrationModal";
+import axios from "axios";
+import { AiOutlineLike } from "react-icons/ai";
+import { AiFillLike } from "react-icons/ai";
 
 function EventCard({
-  id,
-  title,
-  description,
-  date,
-  time,
-  location,
-  attendees,
-  maxAttendees,
+  _id,
+  name,
+  shortDescription,
+  eventDate,
+  eventStartTime,
+  eventEndTime,
+  venue,
   category,
   image,
-  organizer,
-  registrationStatus,
+  club,
 }) {
-  const {user} = useUser();
+  const { user } = useUser();
+  const [registrationStatus, setRegistrationStatus] = useState(false);
+  const [likeStatus,setLikeStatus] = useState(false);
+  const [isRegistrationOpen,setIsRegistrationOpen] = useState(false)
+
+  const formattedDate = dayjs(eventDate).format("DD MMM, YYYY");
+  // Attached a dummy date so dayjs can parse correctly
+  const formattedStartTime = dayjs(`1970-01-01T${eventStartTime}`).format(
+    "h:mm A"
+  );
+  const formattedEndTime = dayjs(`1970-01-01T${eventEndTime}`).format("h:mm A");
+
+
+  const getRegistrationStatus = async ()=>{
+    if(user && user.role !== "student") return ;
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/${_id}/registration/status`,
+        {withCredentials:true});
+
+      if(response.data && response.data.status){
+        setRegistrationStatus(response.data.status) ;
+      }
+    } catch (error) {
+      console.log("Error in fetching registration status :- ",error) ;
+    }
+  }
+
+  useEffect(()=>{
+    if(!user) return;
+    getRegistrationStatus() ;
+  },[user]) ;
+
+
 
   return (
-    <Link to={`/event/${id}`} className="rounded-xl shadow-md overflow-hidden transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-xl">
-      {/* Event Image */}
-      <div className="h-48 relative">
-        <img src={image} className="w-full h-full object-cover" />
-        <div
-          className={`absolute top-3 left-3 px-2 py-1 bg-gradient-to-r from-[#00bebe] to-[#00A1A1] text-white rounded-md text-xs font-medium`}
-        >
-          {category}
-        </div>
-        <div className="absolute top-3 right-3 px-2 py-1 bg-white/90 rounded-xl text-xs font-medium text-gray-700">
-          {attendees}/{maxAttendees}
-        </div>
-      </div>
-
-      {/* Event Content */}
-      <div className="p-5">
-        <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight">{title}</h3>
-
-        <p className="text-gray-600 text-sm leading-relaxed mb-4">{description}</p>
-
-        <div className="mb-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm">📅</span>
-            <span className="text-sm text-gray-700">{date}</span>
+    <>
+    <div className="relative rounded-xl shadow-md overflow-hidden transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-xl">
+      <Link to={`/event/${_id}`}>
+        {/* Event Image */}
+        <div className="h-48 relative">
+          <img
+            src={image ? image : "/dummyImage.webp"}
+            className="w-full h-full object-cover"
+          />
+          <div
+            className={`absolute top-3 left-3 px-2 py-1 bg-gradient-to-r from-[#00bebe] to-[#00A1A1] text-white rounded-md text-xs font-medium`}
+          >
+            {category}
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm">🕐</span>
-            <span className="text-sm text-gray-700">{time}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm">📍</span>
-            <span className="text-sm text-gray-700">{location}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm">👥</span>
-            <span className="text-sm text-gray-700">By {organizer}</span>
-          </div>
+          {/* <div className="absolute top-3 right-3 px-2 py-1 bg-white/90 rounded-xl text-xs font-medium text-gray-700">
+            {attendees}/{maxAttendees}
+          </div> */}
         </div>
 
-        <div className={`flex ${(user) ? `justify-between`:`flex-row-reverse`} items-center`}>
-          {
-            (user && user.role==='student') && (
-              <div>
-                {registrationStatus ? (
-                  <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
-                    {registrationStatus}
-                  </button>
-                ) : (
-                  <button className="primary-button px-4 py-2 text-sm">
-                    Register Now
-                  </button>
-                )}
-              </div>
-            )
-          }
+        {/* Event Content */}
+        <div className={`p-5 ${user && `pb-14`} `}>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight">
+            {name}
+          </h3>
 
-          {
-            (user && user.role==='admin') && (
-              <div>
+          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+            {shortDescription}
+          </p>
+
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">📅</span>
+              <span className="text-sm text-gray-700">{formattedDate}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🕐</span>
+              <span className="text-sm text-gray-700">{`${formattedStartTime} - ${formattedEndTime}`}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm">📍</span>
+              <span className="text-sm text-gray-700">{venue}</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-sm">👥</span>
+              <span className="text-sm text-gray-700">By {club}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+        {user && user.role === "student" && (
+          <div className="absolute left-5 bottom-5">
+            {(registrationStatus === 'Registered' || registrationStatus === 'Waitlist' || registrationStatus === 'Cancelled' ) ? 
+            (
+              <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
+                {registrationStatus}
+              </button>
+            ) 
+            : 
+            registrationStatus === 'not-registered' ? 
+            (
+              <div onClick={()=>{setIsRegistrationOpen(true)}}>
                 <button className="primary-button px-4 py-2 text-sm">
-                  Analytics
+                  Register Now
                 </button>
               </div>
             )
-          }
+            :
+            null
+            }
+          </div>
+        )}
 
-          <button className="p-2 bg-transparent border border-gray-300 rounded-md cursor-pointer text-base hover:bg-gray-50 transition-colors">
-            ❤️
-          </button>
-        </div>
-      </div>
-    </Link>
-  )
+        {(user && (user.role === "admin" || registrationStatus ==='Sub-admin')) && (
+          <div className="absolute left-5 bottom-5">
+            <button className="primary-button px-4 py-2 text-sm">
+              Analytics
+            </button>
+          </div>
+        )}
+
+        {user && (
+          likeStatus ? (
+            <button className="absolute right-5 bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400 hover:bg-gray-200 transition-colors">
+              <AiFillLike />
+            </button>
+          ) : (
+            <button className="absolute right-5 bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl hover:bg-gray-200 transition-colors">
+              <AiOutlineLike />
+            </button>
+          )
+        )}
+
+    </div>
+    {
+      (isRegistrationOpen) &&
+      <RegistrationModal
+        event={{ _id:_id, name:name, club:club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: image, venue: venue }}
+        onClose={() => setIsRegistrationOpen(false)}
+      />
+    }
+    </>
+  );
 }
 
 export default EventCard;

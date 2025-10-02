@@ -78,10 +78,10 @@ const HeroSection = () => {
       ))}
 
       {/* Grid pattern overlay */}
-      <div
+      {/* <div
         className="z-0 pointer-events-none absolute inset-0 
           bg-[linear-gradient(rgba(20,184,166,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.06)_1px,transparent_1px)] bg-[size:64px_64px]"
-      ></div>
+      ></div> */}
 
       {/* Background decoration elements */}
       <div className="z-0 pointer-events-none absolute inset-0 overflow-hidden">
@@ -128,11 +128,11 @@ const HeroSection = () => {
               </span>
             </div>
 
-            <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+            <Link to={'/create-event'} className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
               <span className="text-sm font-medium text-gray-600">
                 ➕ Create Event
               </span>
-            </div>
+            </Link>
           </div>)
         : (
           <Link to="/signup" className="inline-block mt-8">

@@ -17,6 +17,7 @@ import AddSubAdmins from "@/Components/CreateEvent_Components/AddSubAdmins";
 import { useUser } from "@/Context/UserContext";
 import AddAdmin from "@/Components/CreateEvent_Components/AddAdmin";
 import socket from "@/Socket/socket";
+import { useNavigate } from "react-router-dom";
 
 const CreateEventPage = () => {
     const {user} = useUser();
@@ -38,6 +39,7 @@ const CreateEventPage = () => {
   const [selectedUsersIds, setSelectedUsersIds] = useState([]);
   const [errors, setErrors] = useState({});
   const [selectedAdmin,setSelectedAdmin] = useState();
+  const navigate = useNavigate();
 
 
 
@@ -108,6 +110,7 @@ const CreateEventPage = () => {
         );
 
         console.log(response.data);
+        navigate('/')
       } catch (error) {
         console.log("Error in creating admin-event - ", error);
       }
@@ -139,6 +142,7 @@ const CreateEventPage = () => {
         );
 
         console.log(response.data);
+        navigate('/')
       } catch (error) {
         console.log("Error in creating student-event - ", error);
       }

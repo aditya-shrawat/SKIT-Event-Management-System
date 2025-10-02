@@ -12,6 +12,7 @@ import searchRoutes from './routes/search.js'
 import { Server } from 'socket.io';
 import notificationRoutes from './routes/notificationRoutes.js'
 import { eventSocketHandler } from './sockets/eventSocketHandler.js';
+import homeRoutes from './routes/homeRoutes.js'
 
 
 dotenv.config();
@@ -61,6 +62,7 @@ app.use((req, res, next) => {
 app.get("/api/user-info",checkTokenAuthentication,fetchUserInfo);
 app.use('/user',userAuthRoutes) ;
 app.use('/search',searchRoutes);
+app.use('/api/home',homeRoutes)
 app.use('/api/event',eventRoutes);
 app.use('/api/notification',notificationRoutes);
 
