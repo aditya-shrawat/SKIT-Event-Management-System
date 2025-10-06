@@ -62,12 +62,12 @@ const Header = () => {
               }
               {
                 (user && user.role==="admin") &&
-                <div className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                <Link to={"/requests"} className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
                   <div className="text-lg">
                     <LuMessageSquareText />
                   </div>
                   <span>Requests</span>
-                </div>
+                </Link>
               }
 
               {/* Student nav */}

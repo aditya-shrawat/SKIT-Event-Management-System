@@ -18,6 +18,7 @@ import { useUser } from "@/Context/UserContext";
 import AddAdmin from "@/Components/CreateEvent_Components/AddAdmin";
 import socket from "@/Socket/socket";
 import { useNavigate } from "react-router-dom";
+import Header from "@/Components/Header";
 
 const CreateEventPage = () => {
     const {user} = useUser();
@@ -160,7 +161,11 @@ const CreateEventPage = () => {
 
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen w-full">
+    <Header />
+    <div className="w-full h-full">
+
+    <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Grid pattern overlay */}
@@ -280,12 +285,13 @@ const CreateEventPage = () => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Category</SelectLabel>
-                      <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="Technology">Technical</SelectItem>
                       <SelectItem value="Cultural">Cultural</SelectItem>
                       <SelectItem value="Workshop">Workshop</SelectItem>
-                      <SelectItem value="Competition">Competition</SelectItem>
+                      <SelectItem value="Entrepreneurship">Entrepreneurship</SelectItem>
                       <SelectItem value="Sports">Sports</SelectItem>
-                      <SelectItem value="Academic">Academic</SelectItem>
+                      <SelectItem value="Academic">Social</SelectItem>
+                      <SelectItem value="Art & Photography">Art & Photography</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -312,9 +318,12 @@ const CreateEventPage = () => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Club</SelectLabel>
-                      <SelectItem value="S&t">S&t</SelectItem>
+                      <SelectItem value="Science & Technology&t">Science & Technology</SelectItem>
                       <SelectItem value="Toast Master">Toast Master</SelectItem>
-                      <SelectItem value="Club3">Club3</SelectItem>
+                      <SelectItem value="Coding Club">Coding Club</SelectItem>
+                      <SelectItem value="Entrepreneurship Cell">Entrepreneurship Cell</SelectItem>
+                      <SelectItem value="Cultural Committee">Cultural Committee</SelectItem>
+                      <SelectItem value="Photography Club">Photography Club</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -482,6 +491,10 @@ const CreateEventPage = () => {
 
         </form>
       </div>
+    </div>
+
+
+    </div>
     </div>
   );
 };

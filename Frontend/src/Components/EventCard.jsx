@@ -18,6 +18,8 @@ function EventCard({
   category,
   image,
   club,
+  moderationStatus,
+  submittedBy
 }) {
   const { user } = useUser();
   const [registrationStatus, setRegistrationStatus] = useState(false);
@@ -137,34 +139,62 @@ function EventCard({
         </div>
       </Link>
 
-        {user && user.role === "student" && (
+        {user && (
           <div className="absolute left-5 bottom-5">
-            {(registrationStatus === 'Registered' || registrationStatus === 'Waitlist' || registrationStatus === 'Cancelled' ) ? 
-            (
-              <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
-                {registrationStatus}
-              </button>
-            ) 
-            : 
-            registrationStatus === 'not-registered' ? 
-            (
-              <div onClick={()=>{setIsRegistrationOpen(true)}}>
-                <button className="primary-button px-4 py-2 text-sm">
-                  Register Now
-                </button>
-              </div>
-            )
-            :
-            null
-            }
-          </div>
-        )}
+            {/* Case 1: Student (not subadmin, not submitter) → Registration / Registration status */}
+            {user.role === "student" &&
+              submittedBy?.toString() !== user._id?.toString() &&
+              registrationStatus !== "Sub-admin" && (
+                (registrationStatus === "Registered" ||
+                registrationStatus === "Waitlist" ||
+                registrationStatus === "Cancelled") ? (
+                  <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
+                    {registrationStatus}
+                  </button>
+                ) : registrationStatus === "not-registered" ? (
+                  <div onClick={() => setIsRegistrationOpen(true)}>
+                    <button className="primary-button px-4 py-2 text-sm">Register Now</button>
+                  </div>
+                ) : null
+            )}
 
-        {(user && (user.role === "admin" || registrationStatus ==='Sub-admin')) && (
-          <div className="absolute left-5 bottom-5">
-            <button className="primary-button px-4 py-2 text-sm">
-              Analytics
-            </button>
+            {/* Case 2: Admin only → Analytics only */}
+            {user.role === "admin" &&
+              submittedBy?.toString() !== user._id?.toString() && (
+                <button className="primary-button px-4 py-2 text-sm">Analytics</button>
+              )}
+
+            {/* Case 3: Sub-admin only (not submitter) → Analytics only */}
+            {registrationStatus === "Sub-admin" &&
+              submittedBy?.toString() !== user._id?.toString() && (
+                <button className="primary-button px-4 py-2 text-sm">Analytics</button>
+            )}
+
+            {/* Case 4: Sub-admin + Submitter → Analytics + Moderation */}
+            {registrationStatus === "Sub-admin" &&
+              submittedBy?.toString() === user._id?.toString() && (
+                <>
+                  <button className="primary-button px-4 py-2 text-sm">
+                    Analytics
+                  </button>
+
+                  {moderationStatus && (
+                    <button className="ml-2 border-2 border-[#00A1A1] px-4 py-1.5 text-sm rounded-md text-[#00A1A1] font-semibold">
+                      {moderationStatus}
+                    </button>
+                  )}
+                </>
+            )}
+
+            {/* Case 5: Submitter only (not subadmin, not admin) → Moderation only */}
+            {submittedBy?.toString() === user._id?.toString() &&
+              registrationStatus !== "Sub-admin" &&
+              user.role !== "admin" &&
+              moderationStatus && (
+                <button className="border-2 border-[#00A1A1] px-4 py-1.5 text-sm rounded-md text-[#00A1A1] font-semibold">
+                  {moderationStatus}
+                </button>
+            )}
           </div>
         )}
 

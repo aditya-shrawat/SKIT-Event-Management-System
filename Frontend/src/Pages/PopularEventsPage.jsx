@@ -1,67 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EventCard from "../Components/EventCard";
+import axios from "axios";
+import { Skeleton } from "@/Components/ui/skeleton";
 
 const PopularEventsPage = () => {
-  // Mock data for registered events
-  const [registeredEvents] = useState([
-    {
-      id: 1,
-      title: "Tech Innovation Summit 2024",
-      description:
-        "Join us for a day of inspiring talks and networking with industry leaders in technology.",
-      date: "2024-03-15",
-      time: "10:00 AM",
-      location: "SKIT Auditorium",
-      image: "/dummyImage.webp",
-      category: "Technology",
-      attendees: 150,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      isSubAdmin: true,
-      createdByUser: false,
-      subAdminApprovalStatus: "Approved",
-      registrationDate: "2024-02-20",
-    },
-    {
-      id: 2,
-      title: "Design Thinking Workshop",
-      description:
-        "Join us for a hands-on workshop to enhance your design thinking skills.",
-      date: "2024-03-20",
-      time: "2:00 PM",
-      location: "Design Lab",
-      image: "/dummyImage.webp",
-      category: "Workshop",
-      attendees: 45,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      isSubAdmin: false,
-      createdByUser: true,
-      subAdminApprovalStatus: "Pending",
-      registrationDate: "2024-02-18",
-    },
-    {
-      id: 3,
-      title: "Startup Pitch Competition",
-      description:
-        "Join us for a hands-on workshop to enhance your design thinking skills.",
-      date: "2024-03-25",
-      time: "11:00 AM",
-      location: "Main Hall",
-      image: "/dummyImage.webp",
-      category: "Competition",
-      attendees: 200,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      isSubAdmin: true,
-      createdByUser: false,
-      subAdminApprovalStatus: "Approved",
-      registrationDate: "2024-02-25",
-    },
-  ]);
+  const [popularEvents, setPopularEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPopularEvents = async () => {
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/popular-events`, {
+        withCredentials: true,
+      });
+
+      setPopularEvents(response.data.popularEvents);
+    } catch (error) {
+      console.log("Error in fetching popular events :- ", error);
+    }
+    finally {
+      setLoading(false);
+    }
+  }
+
+
+  useEffect(()=>{
+    fetchPopularEvents() ;
+  },[]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Grid pattern overlay */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.06)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
@@ -87,12 +55,18 @@ const PopularEventsPage = () => {
 
       {/* Events Section */}
       <div className="max-w-6xl mx-auto px-4 py-12">
-        {registeredEvents.filter((e) => e.isSubAdmin).length > 0 && (
+        {loading ?
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_,index)=>(
+              <div key={index} className="h-80 w-full max-w-96">
+                <Skeleton className="h-full w-full" />
+              </div>
+            ))}
+          </div>
+        :(
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {registeredEvents
-              .filter((e) => e.isSubAdmin)
-              .map((event) => (
-                <EventCard key={event.id} {...event} />
+            {popularEvents?.map((event) => (
+                <EventCard key={event._id} {...event} />
               ))}
           </div>
         )}

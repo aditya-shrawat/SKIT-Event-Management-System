@@ -10,6 +10,7 @@ import SignupPage from './Pages/SignupPage'
 import SigninPage from './Pages/SigninPage'
 import PopularEventsPage from './Pages/PopularEventsPage'
 import CreateEventPage from './Pages/CreateEventPage'
+import EventRequests from './Pages/EventRequests'
 
 const router = createBrowserRouter([
   {
@@ -22,10 +23,12 @@ const router = createBrowserRouter([
       {path:'/myEvents', element: <MyEvents /> },
       {path:'/popular', element: <PopularEventsPage /> },
       {path:'/registered', element: <RegisteredEvents /> },
+      {path:'/requests', element: <EventRequests /> },
       {path:'/event/:id', element: <EventDetailPage /> },
-      {path:'/create-event', element: <CreateEventPage /> },
+      // {path:'/create-event', element: <CreateEventPage /> },
     ]
   },
+  {path:'/create-event', element: <CreateEventPage /> },
   { path:'/signin', element:<SigninPage /> },
   { path:'/signup', element:<SignupPage /> },
   {

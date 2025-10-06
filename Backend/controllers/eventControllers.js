@@ -3,6 +3,7 @@ import Feedback from "../models/feedbackModel.js";
 import Notification from "../models/notificationModel.js";
 import Registration from "../models/registrationModel.js";
 import User from "../models/userModel.js";
+import { updateEventPopularity } from "../utils/updateEventPopularity.js";
 
 
 // admin new event
@@ -129,7 +130,7 @@ export const fetchEventDetails = async (req,res)=>{
         if(!eventId) return res.status(400).json({error:"Event Id is required."})
 
         const event = await Event.findById(eventId)
-        .select('name shortDescription details capacity image eventDate eventStartTime eventEndTime adminId category venue club eventMode status')
+        .select('name shortDescription details capacity image eventDate eventStartTime eventEndTime adminId category venue club eventMode status submittedBy moderationStatus confirmedSubAdmins')
         .populate("adminId","_id name branch role")
         .populate("confirmedSubAdmins", "_id name branch role")
         .lean();
@@ -180,6 +181,7 @@ export const registerForEvent = async (req,res)=>{
             message: `You have successfully registered for the event "${event.name}".`,
         });
 
+        updateEventPopularity(eventId).catch(err => console.error(err));
         return res.status(200).json({message:"Registration successful."});
     } catch (error) {
         console.log("Error while registration - ",error);
@@ -230,6 +232,8 @@ export const toggleLikeEvent = async (req, res) => {
 
     if (existing && existing.reaction === "like") {
         await Feedback.deleteOne({ _id: existing._id });
+
+        updateEventPopularity(eventId).catch(err => console.error(err));
         return res.status(200).json({ message: "Like removed.", isLiked: false });
     } 
     else {
@@ -238,6 +242,8 @@ export const toggleLikeEvent = async (req, res) => {
             { reaction: "like" },
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
+
+        updateEventPopularity(eventId).catch(err => console.error(err));
         return res.status(200).json({ message: "Event liked.", isLiked: true });
     }
   } catch (error) {
@@ -264,6 +270,142 @@ export const getFeedbackStatus = async (req, res) => {
     });
   } catch (error) {
     console.log("Error while fetching feedback status - ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const getAllRegisteredEvents = async (req, res, next) => {
+    try {
+        const userId = req.user._id;
+
+        if(req.user.role !=='student'){
+            return res.status(401).json({error:"Only registered students are allowed."})
+        }
+
+        const registeredEvents = await Registration.find({ userId })
+        .select('eventId status createdAt')
+        .populate({
+            path: 'eventId',
+            select: 'name shortDescription image category eventDate eventStartTime eventEndTime venue club',
+            options: { lean: true },
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+
+        return res.status(200).json({message: 'Registered events fetched successfully.',registeredEvents});
+    } catch (error) {
+        console.log('Error in fetching registered events - ', error);
+        return res.status(500).json({ error: 'Internal server error.' });
+    }
+};
+
+
+export const getAllEvents_admin = async (req,res)=>{
+    try {
+        const userId = req.user._id;
+
+        if(req.user.role !=='admin'){
+            return res.status(401).json({error:"Only admins are allowed."})
+        }
+
+        const events = await Event.find({ adminId: userId }).select('name shortDescription image category eventDate eventStartTime eventEndTime venue club')
+        .sort({ createdAt: -1 }).lean();
+
+        return res.status(200).json({message:"Admin events fetched successfully.",events});
+    } catch (error) {
+        console.log("Error in fetching admins events - ",error);
+        return res.status(500).json({error:"Internal server error."})
+    }
+}
+
+
+export const getAllEvents_subAdmin = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (req.user.role !== "student") {
+      return res.status(401).json({ error: "Only sub admins are allowed." });
+    }
+
+    // fetch only events where this user is a confirmed sub admin
+    const events = await Event.find({
+        $or: [
+            { confirmedSubAdmins: userId },
+            { submittedBy: userId }
+        ]
+      })
+      .select(
+        "name shortDescription image category eventDate eventStartTime eventEndTime venue club submittedBy moderationStatus"
+      )
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json({
+      message: "Sub-admin events fetched successfully.",
+      events,
+    });
+  } catch (error) {
+    console.log("Error in fetching sub-admin events - ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const getAllEvent_requests = async (req, res) => {
+  try {
+    const adminId = req.user._id;
+
+    if (req.user.role !== "admin") {
+      return res.status(401).json({ error: "Only admins are allowed." });
+    }
+
+    const events = await Event.find({
+      $and: [
+        {
+          $or: [
+            { assignedAdmin: adminId },
+            { adminId: adminId }
+          ]
+        },
+        { submittedBy: { $exists: true, $ne: null } }  // exclude admin-created events
+      ]
+    })
+      .select(
+        "name shortDescription image category eventDate eventStartTime eventEndTime venue club adminId submittedBy moderationStatus confirmedSubAdmins"
+      )
+      .sort({ createdAt: -1 })
+      .populate("submittedBy", "name email role")
+      .lean();
+
+    return res.status(200).json({
+      message: "Admins event requests fetched successfully.",
+      events,
+    });
+  } catch (error) {
+    console.log("Error in fetching event requests - ", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const getPopularEvents = async (req, res) => {
+  try {
+    const popularEvents = await Event.find({ 
+      popularityScore: { $gt: 0 },
+      eventDate: { $gte: new Date() }
+    })
+    .sort({ popularityScore: -1 })
+    .limit(50)
+    .select('name shortDescription image category eventDate eventStartTime eventEndTime venue club popularityScore')
+    .lean();
+
+    return res.status(200).json({
+      message: "Popular events fetched successfully.",
+      popularEvents,
+    });
+  } catch (error) {
+    console.error("Error fetching popular events:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };

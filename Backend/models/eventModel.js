@@ -27,8 +27,12 @@ const eventSchema = mongoose.Schema({
     assignedAdmin: { type: mongoose.Schema.Types.ObjectId, ref: "User" },        // reviewer admin chosen by student
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },           // admin who approved/rejected
     reviewedAt: { type: Date },
+
+    popularityScore: { type: Number, default: 0 },
 },{timestamps:true,})
 
+
+eventSchema.index({ popularityScore: -1, eventDate: 1 });
 
 const Event = mongoose.model('Event',eventSchema) ;
 

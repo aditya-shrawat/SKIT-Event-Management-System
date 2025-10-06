@@ -12,7 +12,9 @@ const categories = [
   "Cultural",
   "Sports",
   "Workshop",
+  "Entrepreneurship",
   "Social",
+  "Art & Photography"
 ];
 
 const Home = () => {
@@ -38,7 +40,7 @@ const Home = () => {
   },[]);
 
   return (
-    <div className="bg-slate-50 h-full">
+    <div className="h-full">
       <HeroSection />
 
       <section className="py-16 px-5">

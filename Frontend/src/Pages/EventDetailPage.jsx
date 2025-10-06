@@ -4,7 +4,7 @@ import { useUser } from "@/Context/UserContext";
 import axios from "axios";
 import dayjs from "dayjs";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { IoIosArrowForward } from "react-icons/io";
 import { Skeleton } from "@/Components/ui/skeleton";
 
@@ -99,7 +99,7 @@ const EventDetailPage = () => {
     <div className="min-h-screen">
       {/* Hero Section with Event Image */}
       <div className="relative h-96">
-        <div className="absolute inset-0 bg-black/25"></div>
+        <div className="absolute inset-0 bg-black/70"></div>
           {(event) && 
             <img src={event.image!=="" ? event.image : "/dummyImage.webp"} 
                 className="w-full h-full object-cover mix-blend-overlay"/>
@@ -122,7 +122,7 @@ const EventDetailPage = () => {
       </div>
 
       {/* Event Details */}
-      <div className="w-full bg-slate-50 px-5 py-12">
+      <div className="w-full px-5 py-12">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
@@ -310,49 +310,104 @@ const EventDetailPage = () => {
               </div>
             </div>
 
-            {/* Registration Button */}
-            {
-              (user && (user.role === "student" && registrationStatus !=='Sub-admin'))? (
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <p className="text-gray-600 leading-relaxed text-center mb-6">
-                    Join the excitement. <br /> Register and connect with peers!
-                  </p>
 
-                  {(registrationStatus === 'Registered' || registrationStatus === 'Waitlist' || registrationStatus === 'Cancelled' ) ? 
-                    (<button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
-                        {registrationStatus}
-                      </button>) 
-                    : 
-                    registrationStatus === 'not-registered' ? 
-                    (<button onClick={()=>{setIsRegistrationOpen(true)}} className="primary-button w-full py-3 px-6">
-                        Register for Event
-                      </button>)
-                    :
-                    null
-                  }
-                </div>
-              ) : 
-              (user && (user.role === "admin" || registrationStatus ==='Sub-admin')) ?(
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <p className="text-gray-600 leading-relaxed text-center mb-6">
-                    Track event performance. <br /> View insightful analytics and make informed decisions.
-                  </p>
-                  <button className="primary-button w-full py-3 px-6">
-                    Analytics
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <p className="text-gray-600 leading-relaxed text-center mb-6">
-                    Join the excitement. <br /> Sign Up and register for the event.
-                  </p>
+            {user ? (
+              <>
+                {/* Case 1: Student (not subadmin, not submitter) → Registration / Registration status */}
+                {user.role === "student" &&
+                  event.submittedBy?.toString() !== user._id?.toString() &&
+                  registrationStatus !== "Sub-admin" && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-gray-600 leading-relaxed text-center mb-6">
+                        Join the excitement. <br /> Register and connect with peers!
+                      </p>
 
-                  <button className="primary-button w-full py-3 px-6">
-                    Sign up
-                  </button>
-                </div>
-              )
-            }
+                      {(registrationStatus === "Registered" ||
+                      registrationStatus === "Waitlist" ||
+                      registrationStatus === "Cancelled") ? (
+                        <button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
+                          {registrationStatus}
+                        </button>
+                      ) : registrationStatus === "not-registered" ? (
+                        <button
+                          onClick={() => setIsRegistrationOpen(true)}
+                          className="primary-button w-full py-3 px-6"
+                        >
+                          Register for Event
+                        </button>
+                      ) : null}
+                    </div>
+                )}
+
+                {/* Case 2: Admin only → Analytics only */}
+                {user.role === "admin" &&
+                  event.submittedBy?.toString() !== user._id?.toString() && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-gray-600 leading-relaxed text-center mb-6">
+                        Track event performance. <br /> View insightful analytics and make
+                        informed decisions.
+                      </p>
+                      <button className="primary-button w-full py-3 px-6">Analytics</button>
+                    </div>
+                )}
+
+                {/* Case 3: Sub-admin only (not submitter) → Analytics only */}
+                {registrationStatus === "Sub-admin" &&
+                  event.submittedBy?.toString() !== user._id?.toString() && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-gray-600 leading-relaxed text-center mb-6">
+                        Track event performance. <br /> View insightful analytics and make
+                        informed decisions.
+                      </p>
+                      <button className="primary-button w-full py-3 px-6">Analytics</button>
+                    </div>
+                )}
+
+                {/* Case 4: Sub-admin + Submitter → Analytics + Moderation */}
+                {registrationStatus === "Sub-admin" &&
+                  event.submittedBy?.toString() === user._id?.toString() && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-gray-600 leading-relaxed text-center mb-6">
+                        Manage your event. <br /> Track analytics and review moderation status.
+                      </p>
+                      <div className="flex gap-2">
+                        <button className="primary-button w-full py-3 px-6">Analytics</button>
+                        {event.moderationStatus && (
+                          <button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
+                            {event.moderationStatus}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                )}
+
+                {/* Case 5: Submitter only (not subadmin, not admin) → Moderation only */}
+                {event.submittedBy?.toString() === user._id?.toString() &&
+                  registrationStatus !== "Sub-admin" &&
+                  user.role !== "admin" &&
+                  event.moderationStatus && (
+                    <div className="bg-white rounded-xl border border-gray-200 p-6">
+                      <p className="text-gray-600 leading-relaxed text-center mb-6">
+                        Your event is under review. <br /> Track its moderation status below.
+                      </p>
+                      <button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
+                        {event.moderationStatus}
+                      </button>
+                    </div>
+                )}
+              </>
+            ) : (
+              // Case 6: Not signed in → Sign Up
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <p className="text-gray-600 leading-relaxed text-center mb-6">
+                  Join the excitement. <br /> Sign Up and register for the event.
+                </p>
+                <Link to={'/signup'}>
+                  <button className="primary-button w-full py-3 px-6">Sign Up</button>
+                </Link>
+              </div>
+            )}
+
           </div>
         </div>
       </div>

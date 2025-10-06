@@ -1,58 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EventCard from "../Components/EventCard";
+import axios from "axios";
+import { useUser } from "@/Context/UserContext";
+import { Skeleton } from "@/Components/ui/skeleton";
 
 const RegisteredEvents = () => {
-  // Mock data for registered events
-  const [registeredEvents] = useState([
-    {
-      id: 1,
-      title: "Tech Innovation Summit 2024",
-      description: "Join us for a day of inspiring talks and networking with industry leaders in technology.",
-      date: "2024-03-15",
-      time: "10:00 AM",
-      location: "SKIT Auditorium",
-      image: "/dummyImage.webp",
-      category: "Technology",
-      attendees: 150,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      registrationStatus: "Confirmed",
-      registrationDate: "2024-02-20",
-    },
-    {
-      id: 2,
-      title: "Design Thinking Workshop",
-      description: "Join us for a hands-on workshop to enhance your design thinking skills.",
-      date: "2024-03-20",
-      time: "2:00 PM",
-      location: "Design Lab",
-      image: "/dummyImage.webp",
-      category: "Workshop",
-      attendees: 45,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      registrationStatus: "Confirmed",
-      registrationDate: "2024-02-18",
-    },
-    {
-      id: 3,
-      title: "Startup Pitch Competition",
-      description: "Join us for a hands-on workshop to enhance your design thinking skills.",
-      date: "2024-03-25",
-      time: "11:00 AM",
-      location: "Main Hall",
-      image: "/dummyImage.webp",
-      category: "Competition",
-      attendees: 200,
-      maxAttendees: 300,
-      organizer: "Tech Club",
-      registrationStatus: "Pending",
-      registrationDate: "2024-02-25",
-    },
-  ])
+  const [registeredEvents,setRegisteredEvents] = useState([]);
+  const [loading,setLoading] = useState(true) ;
+  const {user} = useUser();
+
+  const fetchRegisteredEvents = async ()=>{
+    try {
+      const BackendURL = import.meta.env.VITE_backendURL;
+      const response = await axios.get(`${BackendURL}/api/event/registered-events`,{ withCredentials: true });
+
+      setRegisteredEvents(response.data.registeredEvents) ;
+      console.log("Registered Events :- ",response.data.registeredEvents) ;
+    } catch (error) {
+      console.log("Error in fetching registered events :- ",error) ;
+    }
+    finally{
+      setLoading(false)
+    }
+  }
+
+  useEffect(()=>{
+    if(!user) return ;
+
+    fetchRegisteredEvents();
+  },[user])
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen">
       <section className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
         {/* Grid pattern overlay */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(20,184,166,0.06)_1px,transparent_1px)] bg-[size:64px_64px]"></div>
@@ -86,9 +65,9 @@ const RegisteredEvents = () => {
                   <div className="p-4 md:p-5 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-green-500/10 text-green-600 grid place-items-center">✅</div>
                     <div>
-                      <div className="text-xs text-gray-500">Confirmed</div>
+                      <div className="text-xs text-gray-500">Registered</div>
                       <div className="mt-0.5 text-xl md:text-2xl font-semibold text-green-600">
-                        {registeredEvents.filter((e) => e.registrationStatus === "Confirmed").length}
+                        {registeredEvents.filter((e) => e.status === "Registered").length}
                       </div>
                     </div>
                   </div>
@@ -96,9 +75,9 @@ const RegisteredEvents = () => {
                   <div className="p-4 md:p-5 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-600 grid place-items-center">⏳</div>
                     <div>
-                      <div className="text-xs text-gray-500">Pending</div>
+                      <div className="text-xs text-gray-500">Waitlisted</div>
                       <div className="mt-0.5 text-xl md:text-2xl font-semibold text-amber-600">
-                        {registeredEvents.filter((e) => e.registrationStatus === "Waitlisted").length}
+                        {registeredEvents.filter((e) => e.registrationStatus === "Waitlist").length}
                       </div>
                     </div>
                   </div>
@@ -111,10 +90,21 @@ const RegisteredEvents = () => {
 
       {/* Events Section */}
       <div className="max-w-6xl mx-auto px-4 py-12">
-        {registeredEvents.length > 0 ? (
+        {loading ?
+        (  
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_,index)=>(
+            <div key={index} className="h-80 w-full max-w-96">
+              <Skeleton className="h-full w-full" />
+            </div>
+            ))}
+          </div>
+        )
+        : (registeredEvents.length > 0 ) ? 
+        (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {registeredEvents.map((event) => (
-                <EventCard key={event.id} { ...event } />
+            {registeredEvents?.map((event) => (
+                <EventCard key={event._id} { ...event.eventId } />
             ))}
           </div>
         ) : (
