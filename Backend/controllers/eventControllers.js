@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
 import Feedback from "../models/feedbackModel.js";
 import Notification from "../models/notificationModel.js";
@@ -406,6 +407,80 @@ export const getPopularEvents = async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching popular events:", error);
+    return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const getEventAnalytics = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+    const userRole = req.user.role;
+
+    const event = await Event.findById(eventId).select(
+      "name shortDescription image category eventDate eventStartTime eventEndTime venue club submittedBy moderationStatus capacity adminId confirmedSubAdmins"
+    );
+
+    if (!event) {
+      return res.status(404).json({ error: "Event not found." });
+    }
+
+    const isAuthorized =
+      userRole === "admin" && event.adminId.equals(userId) ||
+      event.confirmedSubAdmins?.some(id => id.equals(userId));
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: "Access denied." });
+    }
+
+    // get registered students
+    const registrations = await Registration.aggregate([
+      { $match: { eventId: new mongoose.Types.ObjectId(eventId) } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $project: {
+          _id: 0,
+          name: "$user.name",
+          collegeId: "$user.collegeId",
+          branch: "$user.branch",
+          registrationDate: "$createdAt",
+        },
+      },
+      { $sort: { registrationDate: -1 } },
+    ]);
+
+
+    const branchWiseCount = {};
+    registrations.forEach((stu) => {
+      if (stu.branch) {
+        branchWiseCount[stu.branch] = (branchWiseCount[stu.branch] || 0) + 1;
+      }
+    });
+
+    const totalLikes = await Feedback.countDocuments({ eventId, reaction: "like" });
+
+    return res.status(200).json({
+      eventDetails: event,
+      analytics: {
+        totalCapacity: event.capacity,
+        totalRegisteredUsers: registrations.length,
+        totalLikes,
+        branchWiseCount,
+        registeredStudents: registrations,
+      },
+    });
+
+  } catch (error) {
+    console.error("Error fetching event analytics:", error);
     return res.status(500).json({ error: "Internal server error." });
   }
 };

@@ -6,6 +6,7 @@ import RegistrationModal from "./RegistrationModal";
 import axios from "axios";
 import { AiOutlineLike } from "react-icons/ai";
 import { AiFillLike } from "react-icons/ai";
+import AnalyticsModel from "./AnalyticsModel";
 
 function EventCard({
   _id,
@@ -25,6 +26,7 @@ function EventCard({
   const [registrationStatus, setRegistrationStatus] = useState(false);
   const [likeStatus,setLikeStatus] = useState(false);
   const [isRegistrationOpen,setIsRegistrationOpen] = useState(false)
+  const [isAnalyticsOpen,setIsAnalyticsOpen] = useState(false);
 
   const formattedDate = dayjs(eventDate).format("DD MMM, YYYY");
   // Attached a dummy date so dayjs can parse correctly
@@ -161,22 +163,20 @@ function EventCard({
             {/* Case 2: Admin only → Analytics only */}
             {user.role === "admin" &&
               submittedBy?.toString() !== user._id?.toString() && (
-                <button className="primary-button px-4 py-2 text-sm">Analytics</button>
+                <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
               )}
 
             {/* Case 3: Sub-admin only (not submitter) → Analytics only */}
             {registrationStatus === "Sub-admin" &&
               submittedBy?.toString() !== user._id?.toString() && (
-                <button className="primary-button px-4 py-2 text-sm">Analytics</button>
+                <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
             )}
 
             {/* Case 4: Sub-admin + Submitter → Analytics + Moderation */}
             {registrationStatus === "Sub-admin" &&
               submittedBy?.toString() === user._id?.toString() && (
                 <>
-                  <button className="primary-button px-4 py-2 text-sm">
-                    Analytics
-                  </button>
+                  <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
 
                   {moderationStatus && (
                     <button className="ml-2 border-2 border-[#00A1A1] px-4 py-1.5 text-sm rounded-md text-[#00A1A1] font-semibold">
@@ -218,6 +218,12 @@ function EventCard({
       <RegistrationModal
         event={{ _id:_id, name:name, club:club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: image, venue: venue }}
         onClose={() => setIsRegistrationOpen(false)}
+      />
+    }
+    {
+      (isAnalyticsOpen) &&
+      <AnalyticsModel
+        onClose={() => setIsAnalyticsOpen(false)}  eventId={_id}
       />
     }
     </>

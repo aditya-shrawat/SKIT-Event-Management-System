@@ -7,6 +7,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { IoIosArrowForward } from "react-icons/io";
 import { Skeleton } from "@/Components/ui/skeleton";
+import AnalyticsModel from "@/Components/AnalyticsModel";
 
 
 const EventDetailPage = () => {
@@ -17,6 +18,7 @@ const EventDetailPage = () => {
   const [registrationStatus, setRegistrationStatus] = useState(false);
   const [loading,setLoading] = useState(true);
   const [isRegistrationOpen,setIsRegistrationOpen] = useState(false);
+  const [isAnalyticsOpen,setIsAnalyticsOpen] = useState(false);
 
   const [formattedDate,setFormattedDate] = useState("DD MMM, YYYY");
   const [formattedStartTime,setFormattedStartTime]  = useState("00:00");
@@ -347,7 +349,7 @@ const EventDetailPage = () => {
                         Track event performance. <br /> View insightful analytics and make
                         informed decisions.
                       </p>
-                      <button className="primary-button w-full py-3 px-6">Analytics</button>
+                      <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button w-full py-3 px-6">Analytics</button>
                     </div>
                 )}
 
@@ -359,7 +361,7 @@ const EventDetailPage = () => {
                         Track event performance. <br /> View insightful analytics and make
                         informed decisions.
                       </p>
-                      <button className="primary-button w-full py-3 px-6">Analytics</button>
+                      <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button w-full py-3 px-6">Analytics</button>
                     </div>
                 )}
 
@@ -371,7 +373,7 @@ const EventDetailPage = () => {
                         Manage your event. <br /> Track analytics and review moderation status.
                       </p>
                       <div className="flex gap-2">
-                        <button className="primary-button w-full py-3 px-6">Analytics</button>
+                        <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button w-full py-3 px-6">Analytics</button>
                         {event.moderationStatus && (
                           <button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
                             {event.moderationStatus}
@@ -419,6 +421,12 @@ const EventDetailPage = () => {
       <RegistrationModal
         event={{ _id:event._id, name: event.name, club: event.club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: event.image, venue: event.venue }}
         onClose={() => setIsRegistrationOpen(false)}
+      />
+    }
+    {
+      (isAnalyticsOpen) &&
+      <AnalyticsModel
+        onClose={() => setIsAnalyticsOpen(false)}  eventId={event._id}
       />
     }
     </div>

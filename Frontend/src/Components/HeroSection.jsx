@@ -49,7 +49,7 @@ const floatingImages = [
   },
 ];
 
-const HeroSection = () => {
+const HeroSection = ({scrollToSection}) => {
   const {user} = useUser();
 
 
@@ -122,7 +122,7 @@ const HeroSection = () => {
         {/* Action buttons */}
         {user ? (
           <div className="flex justify-center gap-4 mt-8 flex-wrap">
-            <div className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
+            <div onClick={() => scrollToSection('Events')} className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-full border border-white/20 shadow-sm transition-all duration-300 hover:-translate-y-0.5 cursor-pointer">
               <span className="text-sm font-medium text-gray-600">
                 🎯 Browse All Events
               </span>
