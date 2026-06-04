@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 
 import React, { useEffect, useRef, useState } from "react";
-import RegistrationTrendChart from "./ui/Registration-trend-chart";
+// import RegistrationTrendChart from "./ui/Registration-trend-chart";
 import CapacityGauge from "./ui/Capacity-gauge";
 import DepartmentBreakdown from "./ui/Department-breakdown";
 import axios from "axios";
@@ -32,7 +32,7 @@ function AnalyticsModel({ onClose, eventId }) {
   const [analytics,setAnalytics] = useState();
   const [loading,setLoading] = useState(false)
 
-  const [remainingCapacity,setRemainingCapacity] = useState(0);
+  // const [remainingCapacity,setRemainingCapacity] = useState(0);
   const [percentCapacity,setPercentCapacity] = useState(0);
   const [formattedDate,setFormattedDate] = useState("");
   const [formattedStartTime,setFormattedStartTime] = useState("");
@@ -68,7 +68,7 @@ function AnalyticsModel({ onClose, eventId }) {
 
   useEffect(()=>{
     if(event && analytics){
-        setRemainingCapacity(event.capacity - analytics.totalRegisteredUsers);
+        // setRemainingCapacity(event.capacity - analytics.totalRegisteredUsers);
         setPercentCapacity(Math.round((analytics.totalRegisteredUsers / event.capacity) * 100)); 
 
         setFormattedDate(dayjs(event.eventDate).format("DD MMM, YYYY"));
@@ -125,9 +125,9 @@ function AnalyticsModel({ onClose, eventId }) {
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-lg font-bold">Event Details</CardTitle>
-                <CardDescription>
+                {/* <CardDescription>
                   Core information for organizers and volunteers
-                </CardDescription>
+                </CardDescription> */}
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

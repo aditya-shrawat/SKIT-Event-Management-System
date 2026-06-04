@@ -59,10 +59,18 @@ const EventDetailPage = () => {
     fetchEventDetail();
   },[eventId])
 
+
+  const isEventPast = (date) => new Date(date).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+
   useEffect(()=>{
-    if(!eventId || !user) return;
-    getRegistrationStatus() ;
-  },[eventId,user])
+    if(!eventId || !user || !event) return;
+
+    if(isEventPast(event?.eventDate)){
+      setRegistrationStatus("Event Closed") ;
+    }else{
+      getRegistrationStatus() ;
+    }
+  },[eventId,event,user])
 
 
   useEffect(()=>{
@@ -133,56 +141,6 @@ const EventDetailPage = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
                 Event Details
               </h2>
-
-              {/* <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    About This Event
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {event.description} This event is organized by{" "}
-                    {event.organizer} and promises to be an engaging experience
-                    for all SKIT students. Join us for an unforgettable time
-                    filled with learning, networking, and fun activities.
-                  </p>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    Event Highlights
-                  </h3>
-                  <ul className="space-y-2 text-gray-600">
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-[#00A1A1] rounded-full mr-3"></span>
-                      Interactive sessions with industry experts
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-[#00A1A1] rounded-full mr-3"></span>
-                      Networking opportunities with fellow students
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-[#00A1A1] rounded-full mr-3"></span>
-                      Hands-on workshops and practical learning
-                    </li>
-                    <li className="flex items-center">
-                      <span className="w-2 h-2 bg-[#00A1A1] rounded-full mr-3"></span>
-                      Certificate of participation
-                    </li>
-                  </ul>
-                </div>
-
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                    What to Bring
-                  </h3>
-                  <p className="text-gray-600">
-                    Please bring your SKIT student ID, notebook, and pen. For
-                    technical events, laptops may be required. Refreshments will
-                    be provided.
-                  </p>
-                </div>
-              </div> */}
-
               {event && 
                 <div
                   className="space-y-6"
@@ -326,7 +284,9 @@ const EventDetailPage = () => {
 
                       {(registrationStatus === "Registered" ||
                       registrationStatus === "Waitlist" ||
-                      registrationStatus === "Cancelled") ? (
+                      registrationStatus === "Cancelled" ||
+                      registrationStatus === "Event Closed"
+                    ) ? (
                         <button className="border-2 border-[#00A1A1] w-full py-3 px-6 rounded-md text-[#00A1A1] font-semibold">
                           {registrationStatus}
                         </button>
@@ -419,7 +379,8 @@ const EventDetailPage = () => {
 
     { (isRegistrationOpen) &&
       <RegistrationModal
-        event={{ _id:event._id, name: event.name, club: event.club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: event.image, venue: event.venue }}
+        event={{ _id:event._id, name: event.name, shortDescription: event.shortDescription, club: event.club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: event.image, venue: event.venue }}
+        getRegistrationStatus={getRegistrationStatus}
         onClose={() => setIsRegistrationOpen(false)}
       />
     }

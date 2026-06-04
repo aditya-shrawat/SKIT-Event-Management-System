@@ -23,10 +23,7 @@ function EventCard({
   submittedBy
 }) {
   const { user } = useUser();
-  const [registrationStatus, setRegistrationStatus] = useState(false);
   const [likeStatus,setLikeStatus] = useState(false);
-  const [isRegistrationOpen,setIsRegistrationOpen] = useState(false)
-  const [isAnalyticsOpen,setIsAnalyticsOpen] = useState(false);
 
   const formattedDate = dayjs(eventDate).format("DD MMM, YYYY");
   // Attached a dummy date so dayjs can parse correctly
@@ -34,22 +31,6 @@ function EventCard({
     "h:mm A"
   );
   const formattedEndTime = dayjs(`1970-01-01T${eventEndTime}`).format("h:mm A");
-
-
-  const getRegistrationStatus = async ()=>{
-    if(user && user.role !== "student") return ;
-    try {
-      const BackendURL = import.meta.env.VITE_backendURL;
-      const response = await axios.get(`${BackendURL}/api/event/${_id}/registration/status`,
-        {withCredentials:true});
-
-      if(response.data && response.data.status){
-        setRegistrationStatus(response.data.status) ;
-      }
-    } catch (error) {
-      console.log("Error in fetching registration status :- ",error) ;
-    }
-  }
 
   const fetchLikeStatus = async ()=>{
     try {
@@ -67,7 +48,6 @@ function EventCard({
 
   useEffect(()=>{
     if(!user) return;
-    getRegistrationStatus() ;
     fetchLikeStatus() ;
   },[user]) ;
 
@@ -89,8 +69,8 @@ function EventCard({
 
   return (
     <>
-    <div className="relative rounded-xl shadow-md overflow-hidden transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-xl">
-      <Link to={`/event/${_id}`}>
+    <div className="relative rounded-xl shadow-md overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl">
+      <div>
         {/* Event Image */}
         <div className="h-48 relative">
           <img
@@ -108,16 +88,16 @@ function EventCard({
         </div>
 
         {/* Event Content */}
-        <div className={`p-5 ${user && `pb-14`} `}>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight">
+        <div className={`p-5 pb-0`}>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight truncate">
             {name}
           </h3>
 
-          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          <p className="text-gray-600 text-sm leading-relaxed mb-4 truncate">
             {shortDescription}
           </p>
 
-          <div className="mb-4 space-y-2">
+          <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-sm">📅</span>
               <span className="text-sm text-gray-700">{formattedDate}</span>
@@ -139,93 +119,29 @@ function EventCard({
             </div>
           </div>
         </div>
-      </Link>
 
-        {user && (
-          <div className="absolute left-5 bottom-5">
-            {/* Case 1: Student (not subadmin, not submitter) → Registration / Registration status */}
-            {user.role === "student" &&
-              submittedBy?.toString() !== user._id?.toString() &&
-              registrationStatus !== "Sub-admin" && (
-                (registrationStatus === "Registered" ||
-                registrationStatus === "Waitlist" ||
-                registrationStatus === "Cancelled") ? (
-                  <button className="border-2 border-[#00A1A1] px-4 py-2 text-sm rounded-md text-[#00A1A1] font-semibold">
-                    {registrationStatus}
-                  </button>
-                ) : registrationStatus === "not-registered" ? (
-                  <div onClick={() => setIsRegistrationOpen(true)}>
-                    <button className="primary-button px-4 py-2 text-sm">Register Now</button>
-                  </div>
-                ) : null
-            )}
+        <div className="p-5 flex items-center">
+          <Link to={`/event/${_id}`} className="outline-button py-2 px-6 hover:bg-gray-100 text-center w-full">
+            View Details
+          </Link>
 
-            {/* Case 2: Admin only → Analytics only */}
-            {user.role === "admin" &&
-              submittedBy?.toString() !== user._id?.toString() && (
-                <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
-              )}
-
-            {/* Case 3: Sub-admin only (not submitter) → Analytics only */}
-            {registrationStatus === "Sub-admin" &&
-              submittedBy?.toString() !== user._id?.toString() && (
-                <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
-            )}
-
-            {/* Case 4: Sub-admin + Submitter → Analytics + Moderation */}
-            {registrationStatus === "Sub-admin" &&
-              submittedBy?.toString() === user._id?.toString() && (
-                <>
-                  <button onClick={()=>{setIsAnalyticsOpen(true)}} className="primary-button px-4 py-2 text-sm">Analytics</button>
-
-                  {moderationStatus && (
-                    <button className="ml-2 border-2 border-[#00A1A1] px-4 py-1.5 text-sm rounded-md text-[#00A1A1] font-semibold">
-                      {moderationStatus}
-                    </button>
-                  )}
-                </>
-            )}
-
-            {/* Case 5: Submitter only (not subadmin, not admin) → Moderation only */}
-            {submittedBy?.toString() === user._id?.toString() &&
-              registrationStatus !== "Sub-admin" &&
-              user.role !== "admin" &&
-              moderationStatus && (
-                <button className="border-2 border-[#00A1A1] px-4 py-1.5 text-sm rounded-md text-[#00A1A1] font-semibold">
-                  {moderationStatus}
+          {user && (
+            <div onClick={toggleLikeEvent} className="outline-button p-1 ml-3 rounded-md cursor-pointer">
+              {likeStatus ? (
+                <button className="p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400">
+                  <AiFillLike />
                 </button>
-            )}
-          </div>
-        )}
-
-        {user && (
-          <div onClick={toggleLikeEvent} className="absolute right-5 bottom-5">
-            {likeStatus ? (
-              <button className="p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400 hover:bg-gray-200">
-                <AiFillLike />
-              </button>
-            ) : (
-              <button className="bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl hover:bg-gray-200">
-                <AiOutlineLike />
-              </button>
-            )}
-          </div>
-        )}
+              ) : (
+                <button className="bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl">
+                  <AiOutlineLike />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
     </div>
-    {
-      (isRegistrationOpen) &&
-      <RegistrationModal
-        event={{ _id:_id, name:name, club:club, date: formattedDate, eventStartTime: formattedStartTime, eventEndTime: formattedEndTime, image: image, venue: venue }}
-        onClose={() => setIsRegistrationOpen(false)}
-      />
-    }
-    {
-      (isAnalyticsOpen) &&
-      <AnalyticsModel
-        onClose={() => setIsAnalyticsOpen(false)}  eventId={_id}
-      />
-    }
     </>
   );
 }

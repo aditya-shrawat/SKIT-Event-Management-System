@@ -147,9 +147,9 @@ export const fetchEventDetails = async (req,res)=>{
 
 export const registerForEvent = async (req,res)=>{
     try {
-        const {phone,semester,eventId} = req.body;
+        const {eventId} = req.body;
 
-        if(!phone || !semester || !eventId) return res.status(400).json({error:"All fields are required."})
+        if(!eventId) return res.status(400).json({error:"Event ID is required."})
         
         const event = await Event.findById(eventId);
         if(!event) return res.status(404).json({error:"Event not found."})
@@ -169,13 +169,12 @@ export const registerForEvent = async (req,res)=>{
         const registration = await Registration.create({
             eventId: eventId,
             userId : userId,
-            userPhone : phone,
-            userSemester : semester,
+            // userSemester : semester,
             registeredAt: new Date()
         });
 
         await Notification.create({
-            sender: userId, // the rejector is the sender of this notification
+            sender: userId, // the registrant is the sender of this notification
             receiver: userId,
             type: "registration_successful",
             eventId,
@@ -453,6 +452,7 @@ export const getEventAnalytics = async (req, res) => {
           collegeId: "$user.collegeId",
           branch: "$user.branch",
           registrationDate: "$createdAt",
+          // semester: "$user.semester",
         },
       },
       { $sort: { registrationDate: -1 } },

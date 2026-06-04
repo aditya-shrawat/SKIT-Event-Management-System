@@ -4,7 +4,7 @@ import { fetchHomeFeed } from '../controllers/homeController.js';
 
 const route = express.Router();
 
-route.get("/feed",checkTokenAuthentication,fetchHomeFeed);
+route.get("/feed",fetchHomeFeed);
 
 
 export default route;

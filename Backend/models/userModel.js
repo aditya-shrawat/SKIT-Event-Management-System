@@ -19,6 +19,10 @@ const UserSchema = mongoose.Schema({
         required: true,
         default: "SKIT"
     },
+    // semester: {
+    //     type: String,
+    //     required: true,
+    // },
     password: {  
         type: String,
         required: true
