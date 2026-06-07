@@ -302,7 +302,7 @@ const EventDetailPage = () => {
                 )}
 
                 {/* Case 2: Admin only → Analytics only */}
-                {user.role === "admin" &&
+                {user.role === "admin" && event.adminId._id?.toString() === user._id?.toString() &&
                   event.submittedBy?.toString() !== user._id?.toString() && (
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
                       <p className="text-gray-600 leading-relaxed text-center mb-6">

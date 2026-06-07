@@ -309,7 +309,7 @@ export const getAllEvents_admin = async (req,res)=>{
             return res.status(401).json({error:"Only admins are allowed."})
         }
 
-        const events = await Event.find({ adminId: userId }).select('name shortDescription image category eventDate eventStartTime eventEndTime venue club')
+        const events = await Event.find({ adminId: userId, moderationStatus: "APPROVED" }).select('name shortDescription image category eventDate eventStartTime eventEndTime venue club')
         .sort({ createdAt: -1 }).lean();
 
         return res.status(200).json({message:"Admin events fetched successfully.",events});

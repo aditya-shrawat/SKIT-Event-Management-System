@@ -227,11 +227,11 @@ function RequestedEvent({
 
         {/* Event Content */}
         <div className={`p-5 pb-14 `}>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2 leading-tight truncate">
             {name}
           </h3>
 
-          <p className="text-gray-600 text-sm leading-relaxed mb-4">
+          <p className="text-gray-600 text-sm leading-relaxed mb-4 truncate">
             {shortDescription}
           </p>
 
