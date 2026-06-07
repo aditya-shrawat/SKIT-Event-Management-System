@@ -1,10 +1,8 @@
 import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
-import Feedback from "../models/feedbackModel.js";
 import Notification from "../models/notificationModel.js";
 import Registration from "../models/registrationModel.js";
 import User from "../models/userModel.js";
-import { updateEventPopularity } from "../utils/updateEventPopularity.js";
 
 
 // admin new event
@@ -181,7 +179,6 @@ export const registerForEvent = async (req,res)=>{
             message: `You have successfully registered for the event "${event.name}".`,
         });
 
-        updateEventPopularity(eventId).catch(err => console.error(err));
         return res.status(200).json({message:"Registration successful."});
     } catch (error) {
         console.log("Error while registration - ",error);
@@ -217,62 +214,6 @@ export const registrationStatusOfEvent = async (req, res) => {
   }
 };
 
-
-export const toggleLikeEvent = async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user._id;
-
-    if (!eventId) return res.status(400).json({ error: "Event ID is required." });
-
-    const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ error: "Event not found." });
-
-    const existing = await Feedback.findOne({ eventId, userId });
-
-    if (existing && existing.reaction === "like") {
-        await Feedback.deleteOne({ _id: existing._id });
-
-        updateEventPopularity(eventId).catch(err => console.error(err));
-        return res.status(200).json({ message: "Like removed.", isLiked: false });
-    } 
-    else {
-        const feedback = await Feedback.findOneAndUpdate(
-            { eventId, userId },
-            { reaction: "like" },
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
-
-        updateEventPopularity(eventId).catch(err => console.error(err));
-        return res.status(200).json({ message: "Event liked.", isLiked: true });
-    }
-  } catch (error) {
-    console.log("Error in toggling like - ", error);
-    return res.status(500).json({ error: "Internal server error." });
-  }
-};
-
-
-export const getFeedbackStatus = async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user._id;
-
-    if (!eventId) return res.status(400).json({ error: "Event ID is required." });
-
-    const event = await Event.findById(eventId);
-    if (!event) return res.status(404).json({ error: "Event not found." });
-
-    const feedback = await Feedback.findOne({ eventId, userId });
-
-    return res.status(200).json({
-      isLiked: !!(feedback && feedback.reaction === "like"),
-    });
-  } catch (error) {
-    console.log("Error while fetching feedback status - ", error);
-    return res.status(500).json({ error: "Internal server error." });
-  }
-};
 
 
 export const getAllRegisteredEvents = async (req, res, next) => {
@@ -389,27 +330,6 @@ export const getAllEvent_requests = async (req, res) => {
 };
 
 
-export const getPopularEvents = async (req, res) => {
-  try {
-    const popularEvents = await Event.find({ 
-      popularityScore: { $gt: 0 },
-      eventDate: { $gte: new Date() }
-    })
-    .sort({ popularityScore: -1 })
-    .limit(50)
-    .select('name shortDescription image category eventDate eventStartTime eventEndTime venue club popularityScore')
-    .lean();
-
-    return res.status(200).json({
-      message: "Popular events fetched successfully.",
-      popularEvents,
-    });
-  } catch (error) {
-    console.error("Error fetching popular events:", error);
-    return res.status(500).json({ error: "Internal server error." });
-  }
-};
-
 
 export const getEventAnalytics = async (req, res) => {
   try {
@@ -466,14 +386,11 @@ export const getEventAnalytics = async (req, res) => {
       }
     });
 
-    const totalLikes = await Feedback.countDocuments({ eventId, reaction: "like" });
-
     return res.status(200).json({
       eventDetails: event,
       analytics: {
         totalCapacity: event.capacity,
         totalRegisteredUsers: registrations.length,
-        totalLikes,
         branchWiseCount,
         registeredStudents: registrations,
       },

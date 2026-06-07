@@ -1,12 +1,7 @@
 import { useUser } from "@/Context/UserContext";
 import dayjs from "dayjs";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import RegistrationModal from "./RegistrationModal";
-import axios from "axios";
-import { AiOutlineLike } from "react-icons/ai";
-import { AiFillLike } from "react-icons/ai";
-import AnalyticsModel from "./AnalyticsModel";
 
 function EventCard({
   _id,
@@ -23,47 +18,12 @@ function EventCard({
   submittedBy
 }) {
   const { user } = useUser();
-  const [likeStatus,setLikeStatus] = useState(false);
-
   const formattedDate = dayjs(eventDate).format("DD MMM, YYYY");
   // Attached a dummy date so dayjs can parse correctly
   const formattedStartTime = dayjs(`1970-01-01T${eventStartTime}`).format(
     "h:mm A"
   );
   const formattedEndTime = dayjs(`1970-01-01T${eventEndTime}`).format("h:mm A");
-
-  const fetchLikeStatus = async ()=>{
-    try {
-      const BackendURL = import.meta.env.VITE_backendURL;
-      const response = await axios.get(`${BackendURL}/api/event/${_id}/feedback/status`,
-        {withCredentials:true});
-
-      if(response.data && response.data.isLiked){
-        setLikeStatus(response.data.isLiked) ;
-      }
-    } catch (error) {
-      console.log("Error in fetching like status :- ",error) ;
-    }
-  }
-
-  useEffect(()=>{
-    if(!user) return;
-    fetchLikeStatus() ;
-  },[user]) ;
-
-
-  const toggleLikeEvent = async () => {
-    try {
-      const BackendURL = import.meta.env.VITE_backendURL;
-      const response = await axios.post(`${BackendURL}/api/event/${_id}/feedback`, {}, { withCredentials: true });
-
-      if (response.data && typeof response.data.isLiked === "boolean") {
-        setLikeStatus(response.data.isLiked);  // set true or false always
-      }
-    } catch (error) {
-      console.log("Error in toggling like status :- ", error);
-    }
-  };
 
 
 
@@ -124,20 +84,6 @@ function EventCard({
           <Link to={`/event/${_id}`} className="outline-button py-2 px-6 hover:bg-gray-100 text-center w-full">
             View Details
           </Link>
-
-          {user && (
-            <div onClick={toggleLikeEvent} className="outline-button p-1 ml-3 rounded-md cursor-pointer">
-              {likeStatus ? (
-                <button className="p-1.5 bg-transparent rounded-md cursor-pointer text-xl text-amber-400">
-                  <AiFillLike />
-                </button>
-              ) : (
-                <button className="bottom-5 p-1.5 bg-transparent rounded-md cursor-pointer text-xl">
-                  <AiOutlineLike />
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 

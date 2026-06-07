@@ -13,7 +13,7 @@ function CapacityGauge({ percent = 0 }) {
     <div className="relative">
       <ChartContainer
         config={{
-          filled: { label: "Filled", color: "#00bebe" },
+          filled: { label: "Filled", color: "#A94442" },
           remaining: { label: "Remaining", color: "#00bebe" },
         }}
         className="h-[280px] w-full"

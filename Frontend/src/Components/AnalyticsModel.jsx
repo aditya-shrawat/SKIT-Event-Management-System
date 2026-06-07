@@ -15,13 +15,11 @@ import {
 } from "@/components/ui/table";
 
 import React, { useEffect, useRef, useState } from "react";
-// import RegistrationTrendChart from "./ui/Registration-trend-chart";
 import CapacityGauge from "./ui/Capacity-gauge";
 import DepartmentBreakdown from "./ui/Department-breakdown";
 import axios from "axios";
 import dayjs from "dayjs";
 import { set } from "date-fns";
-import { AiFillLike } from "react-icons/ai";
 
 
 
@@ -32,7 +30,6 @@ function AnalyticsModel({ onClose, eventId }) {
   const [analytics,setAnalytics] = useState();
   const [loading,setLoading] = useState(false)
 
-  // const [remainingCapacity,setRemainingCapacity] = useState(0);
   const [percentCapacity,setPercentCapacity] = useState(0);
   const [formattedDate,setFormattedDate] = useState("");
   const [formattedStartTime,setFormattedStartTime] = useState("");
@@ -68,8 +65,7 @@ function AnalyticsModel({ onClose, eventId }) {
 
   useEffect(()=>{
     if(event && analytics){
-        // setRemainingCapacity(event.capacity - analytics.totalRegisteredUsers);
-        setPercentCapacity(Math.round((analytics.totalRegisteredUsers / event.capacity) * 100)); 
+        setPercentCapacity((analytics.totalRegisteredUsers / event.capacity) * 100); 
 
         setFormattedDate(dayjs(event.eventDate).format("DD MMM, YYYY"));
         setFormattedStartTime(dayjs(`1970-01-01T${event.eventStartTime}`).format("h:mm A" ));
@@ -172,22 +168,10 @@ function AnalyticsModel({ onClose, eventId }) {
               </CardHeader>
             </Card>
 
-            {/* <Card>
-              <CardHeader>
-                <CardDescription>Seats Remaining</CardDescription>
-                <CardTitle className="text-3xl">{remainingCapacity}</CardTitle>
-              </CardHeader>
-            </Card> */}
-
             <Card>
               <CardHeader>
-                <CardDescription>Total Likes</CardDescription>
-                <CardTitle className="text-3xl flex justify-center items-center gap-3">
-                    {analytics.totalLikes}
-                    <span className="text-amber-400">
-                        <AiFillLike />
-                    </span>
-                </CardTitle>
+                <CardDescription>Seats Remaining</CardDescription>
+                <CardTitle className="text-3xl">{event.capacity - analytics.totalRegisteredUsers}</CardTitle>
               </CardHeader>
             </Card>
           </section>
@@ -212,7 +196,7 @@ function AnalyticsModel({ onClose, eventId }) {
                 <CardDescription>Filled vs remaining seats</CardDescription>
               </CardHeader>
               <CardContent>
-                <CapacityGauge percent={percentCapacity} />
+                <CapacityGauge percent={percentCapacity.toFixed(1)} />
               </CardContent>
             </Card>
           </section>

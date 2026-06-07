@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { HiMiniHome } from "react-icons/hi2";
-import { FaFireAlt } from "react-icons/fa";
 import { BsFillClipboard2CheckFill } from "react-icons/bs";
 import { MdAdd } from "react-icons/md";
 import { Link } from "react-router-dom";
 import { useUser } from "@/Context/UserContext.jsx";
 import { MdEventAvailable } from "react-icons/md";
-import { LuMessagesSquare } from "react-icons/lu";
 import { LuMessageSquareText } from "react-icons/lu";
 import { cleanupNotificationListener, registerUserSocket, setupNotificationListener } from "@/Socket/socketService";
 import socket from "@/Socket/socket";
@@ -73,11 +71,11 @@ const Header = () => {
               {/* Student nav */}
               {
                 (user && user.role==="student") &&
-                <Link to="/popular" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
+                <Link to="/myEvents" className="flex items-center gap-2 p-2 text-sm font-medium text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer outline-none border-none">
                   <div className="text-lg">
-                    <FaFireAlt />
+                    <MdEventAvailable className="text-xl" />
                   </div>
-                  <span>Popular</span>
+                  <span>My Events</span>
                 </Link>
               }
               {

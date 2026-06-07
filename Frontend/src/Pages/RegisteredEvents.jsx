@@ -15,7 +15,6 @@ const RegisteredEvents = () => {
       const response = await axios.get(`${BackendURL}/api/event/registered-events`,{ withCredentials: true });
 
       setRegisteredEvents(response.data.registeredEvents) ;
-      console.log("Registered Events :- ",response.data.registeredEvents) ;
     } catch (error) {
       console.log("Error in fetching registered events :- ",error) ;
     }
