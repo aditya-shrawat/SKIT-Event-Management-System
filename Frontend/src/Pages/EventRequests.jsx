@@ -4,6 +4,18 @@ import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
 import socket from "@/Socket/socket";
+import { useUser } from "@/Context/UserContext";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { PencilIcon, ShareIcon, TrashIcon } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const EventRequests = () => {
   const [requestedEvents, setRequestedEvents] = useState([]);
@@ -169,6 +181,7 @@ function RequestedEvent({
   moderationStatus,
   submittedBy,
 }) {
+  const { user } = useUser();
   const formattedDate = dayjs(eventDate).format("DD MMM, YYYY");
   // Attached a dummy date so dayjs can parse correctly
   const formattedStartTime = dayjs(`1970-01-01T${eventStartTime}`).format(
@@ -223,6 +236,40 @@ function RequestedEvent({
           {/* <div className="absolute top-3 right-3 px-2 py-1 bg-white/90 rounded-xl text-xs font-medium text-gray-700">
             {attendees}/{maxAttendees}
           </div> */}
+
+          {
+            (user && user?._id.toString() === adminId?.toString()) &&
+            <div className="absolute top-3 right-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full size-8 bg-transparent border-gray-300 hover:bg-white/20">
+                    <BsThreeDotsVertical className="text-gray-100 " />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link to={`/event/${_id}/edit`} className="flex items-center gap-2 w-full">
+                        <PencilIcon />
+                        Edit
+                      </Link>
+                    </DropdownMenuItem>
+                    {/* <DropdownMenuItem>
+                      <ShareIcon />
+                      Share
+                    </DropdownMenuItem> */}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem variant="destructive">
+                      <TrashIcon />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          }
         </div>
 
         {/* Event Content */}

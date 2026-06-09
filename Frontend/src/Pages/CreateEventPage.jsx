@@ -318,7 +318,7 @@ const CreateEventPage = () => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectLabel>Club</SelectLabel>
-                      <SelectItem value="Science & Technology&t">Science & Technology</SelectItem>
+                      <SelectItem value="Science & Technology">Science & Technology</SelectItem>
                       <SelectItem value="Toast Master">Toast Master</SelectItem>
                       <SelectItem value="Coding Club">Coding Club</SelectItem>
                       <SelectItem value="Entrepreneurship Cell">Entrepreneurship Cell</SelectItem>

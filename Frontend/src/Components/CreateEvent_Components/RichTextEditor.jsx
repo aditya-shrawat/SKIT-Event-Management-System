@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Bold, Italic } from "lucide-react";
 
 const RichTextEditor = ({ formData, setFormData, errors }) => {
@@ -7,6 +7,12 @@ const RichTextEditor = ({ formData, setFormData, errors }) => {
     italic: false,
   });
   const editorRef = useRef(null);
+
+  useEffect(() => {
+    if (editorRef.current && formData.details && editorRef.current.innerHTML === '') {
+      editorRef.current.innerHTML = formData.details;
+    }
+  }, [formData.details]);
 
   // Handle text formatting
   const formatText = (command) => {

@@ -1,14 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import { RxCross2 } from "react-icons/rx";
 import axios from "axios";
 import { IoSearchOutline } from "react-icons/io5";
 
-const AddSubAdmins = ({ setSelectedUsersIds }) => {
+const AddSubAdmins = ({ setSelectedUsersIds, existingSubAdmins = [] }) => {
   const [inputString, setInputString] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [searchedUsers, setSearchedUsers] = useState([]);
-  const [selectedUsersInfo, setSelectedUsersInfo] = useState([]);
+  const [selectedUsersInfo, setSelectedUsersInfo] = useState(existingSubAdmins);
+
+  useEffect(() => {
+    setSelectedUsersIds(selectedUsersInfo.map((u) => u._id));
+  }, [selectedUsersInfo]);
 
   const searchUsers = async (e) => {
     e.preventDefault();

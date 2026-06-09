@@ -25,6 +25,7 @@ export const createNewEvent_admin = async (req,res)=>{
             category, venue,club,eventMode,status,
 
             adminId : user._id,
+            submittedBy: user._id,           // admin himself is the submitter for his created events
             pendingSubAdmins:selectedSubAdmins,
             
             moderationStatus: "APPROVED",
@@ -250,7 +251,7 @@ export const getAllEvents_admin = async (req,res)=>{
             return res.status(401).json({error:"Only admins are allowed."})
         }
 
-        const events = await Event.find({ adminId: userId, moderationStatus: "APPROVED" }).select('name shortDescription image category eventDate eventStartTime eventEndTime venue club')
+        const events = await Event.find({ adminId: userId, moderationStatus: "APPROVED" }).select('name shortDescription image adminId category eventDate eventStartTime eventEndTime venue club')
         .sort({ createdAt: -1 }).lean();
 
         return res.status(200).json({message:"Admin events fetched successfully.",events});
@@ -399,5 +400,128 @@ export const getEventAnalytics = async (req, res) => {
   } catch (error) {
     console.error("Error fetching event analytics:", error);
     return res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+
+export const updateEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json({ success: false, message: "Event not found" });
+    }
+
+    if (event.adminId.toString() !== userId.toString()) {
+      return res.status(403).json({
+        message: "Access denied. Only the event admin can update this event.",
+      });
+    }
+
+    // if (event.status === "cancelled" || event.status === "completed") {
+    //   return res.status(400).json({
+    //     message: `Cannot update an event that is already ${event.status}.`,
+    //   });
+    // }
+
+    const PreviousEventName = event.name;
+
+    const restrictedFields = [
+      "adminId",
+      "pendingSubAdmins",
+      "submittedBy",
+      "assignedAdmin",
+      "reviewedBy",
+      "reviewedAt",
+      "moderationStatus",
+      "popularityScore",
+      "status",
+    ];
+
+    const updateData = { ...req.body };
+    restrictedFields.forEach((field) => delete updateData[field]);
+
+    // separate subadmins from the rest
+    const { confirmedSubAdmins, ...restUpdateData } = updateData;
+
+    const updateQuery = { $set: restUpdateData };
+    if (confirmedSubAdmins !== undefined) {
+      updateQuery.$set.confirmedSubAdmins = confirmedSubAdmins;
+    }
+
+    if (updateData.eventDate) {
+      const newDate = new Date(updateData.eventDate);
+      if (newDate < new Date()) {
+        return res.status(400).json({
+          message: "Event date cannot be set to a past date.",
+        });
+      }
+    }
+
+    if (updateData.eventMode && !["Online", "Offline", "Hybrid"].includes(updateData.eventMode)) {
+      return res.status(400).json({
+        message: "Invalid event mode. Must be Online, Offline, or Hybrid.",
+      });
+    }
+
+    if (updateData.capacity !== undefined && updateData.capacity <= 0) {
+      return res.status(400).json({
+        message: "Capacity must be a positive number.",
+      });
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(
+      eventId,
+      updateQuery,
+      { new: true, runValidators: true }
+    );
+
+    // notify about update
+
+    const registrations = await Registration.find({ eventId }).select('userId');
+    const registeredUserIds = registrations.map(r => r.userId.toString());
+
+    const subAdminIds = event.confirmedSubAdmins.map(id => id.toString());
+
+    // merge & deduplicate, exclude the admin himself
+    const recipientIds = [
+      ...new Set([...registeredUserIds, ...subAdminIds])
+    ].filter(id => id !== userId.toString());
+
+    // notifications & emit sockets
+    if (recipientIds.length > 0) {
+      const notificationMessage = `"${PreviousEventName}" event details have been updated. Check the latest information.`;
+
+      const notifications = recipientIds.map(receiverId => ({
+        sender: userId,
+        receiver: receiverId,
+        type: 'event_updated',
+        eventId: updatedEvent._id,
+        message: notificationMessage,
+        status: 'unseen',
+      }));
+
+      await Notification.insertMany(notifications);
+
+      recipientIds.forEach(receiverId => {
+        req.io.to(`user_${receiverId}`).emit('event_updated', {
+          eventId: updatedEvent._id,
+          eventName: updatedEvent.name,
+          message: notificationMessage,
+          updatedAt: new Date(),
+        });
+      });
+    }
+
+    return res.status(200).json({
+      message: "Event updated successfully.",
+      data: updatedEvent,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Internal server error.", error: error.message });
   }
 };
