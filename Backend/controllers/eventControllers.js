@@ -404,124 +404,220 @@ export const getEventAnalytics = async (req, res) => {
 };
 
 
-export const updateEvent = async (req, res) => {
-  try {
-    const { eventId } = req.params;
-    const userId = req.user._id;
+// diffs old vs new subadmins
+export const diffSubAdmins = (event, confirmedSubAdmins) => {
+    const existingConfirmed = event.confirmedSubAdmins.map(id => id.toString());
+    const existingPending = event.pendingSubAdmins.map(id => id.toString());
+    const incomingIds = confirmedSubAdmins.map(id => id.toString());
+    const alreadyProcessed = new Set([...existingConfirmed, ...existingPending]);
 
-    const event = await Event.findById(eventId);
+    return {
+        newSubAdmins: incomingIds.filter(id => !alreadyProcessed.has(id)),
+        removedSubAdmins: existingConfirmed.filter(id => !incomingIds.includes(id)),
+    };
+};
 
-    if (!event) {
-      return res.status(404).json({ success: false, message: "Event not found" });
-    }
+// sends new subadmin invitations
+export const sendSubAdminInvitations = async (io, newSubAdmins, updatedEvent, userId) => {
+    if (newSubAdmins.length === 0) return;
 
-    if (event.adminId.toString() !== userId.toString()) {
-      return res.status(403).json({
-        message: "Access denied. Only the event admin can update this event.",
-      });
-    }
+    await Notification.insertMany(newSubAdmins.map(subAdminId => ({
+        sender: userId,
+        receiver: subAdminId,
+        type: "sub_admin_invitation",
+        eventId: updatedEvent._id,
+        message: `You have been invited as a sub-admin for the event "${updatedEvent.name}".`,
+        status: "unseen",
+        outcome: "pending",
+    })));
 
-    // if (event.status === "cancelled" || event.status === "completed") {
-    //   return res.status(400).json({
-    //     message: `Cannot update an event that is already ${event.status}.`,
-    //   });
-    // }
-
-    const PreviousEventName = event.name;
-
-    const restrictedFields = [
-      "adminId",
-      "pendingSubAdmins",
-      "submittedBy",
-      "assignedAdmin",
-      "reviewedBy",
-      "reviewedAt",
-      "moderationStatus",
-      "popularityScore",
-      "status",
-    ];
-
-    const updateData = { ...req.body };
-    restrictedFields.forEach((field) => delete updateData[field]);
-
-    // separate subadmins from the rest
-    const { confirmedSubAdmins, ...restUpdateData } = updateData;
-
-    const updateQuery = { $set: restUpdateData };
-    if (confirmedSubAdmins !== undefined) {
-      updateQuery.$set.confirmedSubAdmins = confirmedSubAdmins;
-    }
-
-    if (updateData.eventDate) {
-      const newDate = new Date(updateData.eventDate);
-      if (newDate < new Date()) {
-        return res.status(400).json({
-          message: "Event date cannot be set to a past date.",
+    newSubAdmins.forEach(subAdminId => {
+        io.to(`user_${subAdminId}`).emit("new_notification", {
+            type: "sub_admin_invitation",
+            eventId: updatedEvent._id,
+            eventName: updatedEvent.name,
+            message: `You have been invited as a sub-admin for "${updatedEvent.name}".`,
         });
-      }
-    }
+    });
+};
 
-    if (updateData.eventMode && !["Online", "Offline", "Hybrid"].includes(updateData.eventMode)) {
-      return res.status(400).json({
-        message: "Invalid event mode. Must be Online, Offline, or Hybrid.",
-      });
-    }
+// notifies all participants about the event update 
+export const notifyEventUpdate = async (io, updatedEvent, userId, previousEventName, eventId) => {
+    const registeredUserIds = (await Registration.distinct("userId", { eventId })).map(id => id.toString());
+    const subAdminIds = updatedEvent.confirmedSubAdmins.map(id => id.toString());
 
-    if (updateData.capacity !== undefined && updateData.capacity <= 0) {
-      return res.status(400).json({
-        message: "Capacity must be a positive number.",
-      });
-    }
-
-    const updatedEvent = await Event.findByIdAndUpdate(
-      eventId,
-      updateQuery,
-      { new: true, runValidators: true }
-    );
-
-    // notify about update
-
-    const registrations = await Registration.find({ eventId }).select('userId');
-    const registeredUserIds = registrations.map(r => r.userId.toString());
-
-    const subAdminIds = event.confirmedSubAdmins.map(id => id.toString());
-
-    // merge & deduplicate, exclude the admin himself
     const recipientIds = [
-      ...new Set([...registeredUserIds, ...subAdminIds])
+        ...new Set([...registeredUserIds, ...subAdminIds])
     ].filter(id => id !== userId.toString());
 
-    // notifications & emit sockets
-    if (recipientIds.length > 0) {
-      const notificationMessage = `"${PreviousEventName}" event details have been updated. Check the latest information.`;
+    if (recipientIds.length === 0) return;
 
-      const notifications = recipientIds.map(receiverId => ({
+    const notificationMessage = `"${previousEventName}" event details have been updated. Check the latest information.`;
+
+    await Notification.insertMany(recipientIds.map(receiverId => ({
         sender: userId,
         receiver: receiverId,
-        type: 'event_updated',
+        type: "event_updated",
         eventId: updatedEvent._id,
         message: notificationMessage,
-        status: 'unseen',
+        status: "unseen",
+    })));
+
+    recipientIds.forEach(receiverId => {
+        io.to(`user_${receiverId}`).emit("event_updated", {
+            eventId: updatedEvent._id,
+            eventName: updatedEvent.name,
+            message: notificationMessage,
+            updatedAt: new Date(),
+        });
+    });
+};
+
+export const updateEvent = async (req, res) => {
+    try {
+        const { eventId } = req.params;
+        const userId = req.user._id;
+
+        const event = await Event.findById(eventId);
+        if (!event) return res.status(404).json({ message: "Event not found" });
+
+        if (event.adminId.toString() !== userId.toString()) {
+            return res.status(403).json({ message: "Access denied. Only the event admin can update this event." });
+        }
+
+        const previousEventName = event.name;
+
+        const restrictedFields = ["adminId", "pendingSubAdmins", "submittedBy", "assignedAdmin", "reviewedBy", "reviewedAt", "moderationStatus", "popularityScore", "status"];
+        const updateData = { ...req.body };
+        restrictedFields.forEach((field) => delete updateData[field]);
+
+        // validation
+        if (updateData.eventDate && new Date(updateData.eventDate) < new Date()) {
+            return res.status(400).json({ message: "Event date cannot be set to a past date." });
+        }
+        if (updateData.eventMode && !["Online", "Offline", "Hybrid"].includes(updateData.eventMode)) {
+            return res.status(400).json({ message: "Invalid event mode. Must be Online, Offline, or Hybrid." });
+        }
+        if (updateData.capacity !== undefined && updateData.capacity <= 0) {
+            return res.status(400).json({ message: "Capacity must be a positive number." });
+        }
+
+        // build update query
+        const { confirmedSubAdmins, ...restUpdateData } = updateData;
+        const updateQuery = { $set: restUpdateData };
+
+        let newSubAdmins = [];
+        if (confirmedSubAdmins !== undefined) {
+            const { newSubAdmins: _new, removedSubAdmins } = diffSubAdmins(event, confirmedSubAdmins);
+            newSubAdmins = _new;
+
+            if (removedSubAdmins.length > 0) updateQuery.$pull = { confirmedSubAdmins: { $in: removedSubAdmins } };
+            if (newSubAdmins.length > 0) updateQuery.$addToSet = { pendingSubAdmins: { $each: newSubAdmins } };
+
+            delete updateQuery.$set.confirmedSubAdmins;
+        }
+
+        const updatedEvent = await Event.findByIdAndUpdate(eventId, updateQuery, { new: true, runValidators: true });
+
+        await Promise.all([
+            sendSubAdminInvitations(req.io, newSubAdmins, updatedEvent, userId),
+            notifyEventUpdate(req.io, updatedEvent, userId, previousEventName, eventId),
+        ]);
+
+        return res.status(200).json({ message: "Event updated successfully.", data: updatedEvent });
+
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
+
+
+export const deleteEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const requestingUserId = req.user._id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found.",
+      });
+    }
+
+    if (event.adminId.toString() !== requestingUserId.toString()) {
+      return res.status(403).json({
+        message: "Access denied. Only the event admin can delete this event.",
+      });
+    }
+
+    const registeredStudentIds = await Registration.distinct("userId", { eventId });
+
+    const allRecipientIds = [
+      ...new Set([
+        ...event.confirmedSubAdmins,
+        ...event.pendingSubAdmins,
+        ...registeredStudentIds,
+      ].map((id) => id.toString())) 
+    ];
+
+    // notifications 
+    if (allRecipientIds.length > 0) {
+      const notifications = allRecipientIds.map((recipientId) => ({
+        sender: requestingUserId,
+        receiver: recipientId,        
+        type: "event_deleted",        
+        eventId,
+        message: `The event "${event.name}" has been deleted by the admin.`,
+        status: "unseen",
+        outcome: "pending",
       }));
 
       await Notification.insertMany(notifications);
-
-      recipientIds.forEach(receiverId => {
-        req.io.to(`user_${receiverId}`).emit('event_updated', {
-          eventId: updatedEvent._id,
-          eventName: updatedEvent.name,
-          message: notificationMessage,
-          updatedAt: new Date(),
-        });
-      });
     }
 
+    await Promise.all([
+      Registration.deleteMany({ eventId }),
+      Event.findByIdAndDelete(eventId),
+    ]);
+
+    // real-time socket notifications
+    const io = req.io;
+    const basePayload = {
+      type: "EVENT_DELETED",
+      eventId,
+      eventName: event.name,
+      deletedAt: new Date(),
+    };
+
+    event.confirmedSubAdmins.forEach((subAdminId) => {
+      io.to(`user_${subAdminId.toString()}`).emit("event_deleted", {
+        ...basePayload,
+        message: `The event "${event.name}" you were managing has been deleted.`,
+      });
+    });
+
+    event.pendingSubAdmins.forEach((subAdminId) => {
+      io.to(`user_${subAdminId.toString()}`).emit("event_deleted", {
+        ...basePayload,
+        message: `The event "${event.name}" you had a pending invitation for has been deleted.`,
+      });
+    });
+
+    registeredStudentIds.forEach((studentId) => {
+      io.to(`user_${studentId.toString()}`).emit("event_deleted", {
+        ...basePayload,
+        message: `The event "${event.name}" you registered for has been deleted.`,
+      });
+    });
+
     return res.status(200).json({
-      message: "Event updated successfully.",
-      data: updatedEvent,
+      message: "Event deleted successfully."
     });
 
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Internal server error.", error: error.message });
+    console.error("deleteEvent error:", error);
+    return res.status(500).json({
+      message: "Internal server error while deleting the event.",
+    });
   }
 };

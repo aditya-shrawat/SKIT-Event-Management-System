@@ -8,7 +8,7 @@ const notificationSchema = mongoose.Schema({
     enum: ['sub_admin_invitation', 'subAdmin_invitation_accepted', 'subAdmin_invitation_rejected',
       'admin_invitation','approved_student_event','rejected_student_event',
       'registration_successful',
-      'event_updated'
+      'event_updated','event_deleted'
     ],
     required: true 
   },

@@ -1,9 +1,9 @@
 import { useUser } from "@/Context/UserContext";
 import dayjs from "dayjs";
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { BsThreeDotsVertical } from "react-icons/bs";
-import { PencilIcon, ShareIcon, TrashIcon } from "lucide-react"
+import { PencilIcon, ShareIcon, Trash2Icon, TrashIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogMedia, AlertDialogTitle } from "./ui/alert-dialog";
+import axios from "axios";
 
 function EventCard({
   _id,
@@ -37,6 +39,25 @@ function EventCard({
   );
   const formattedEndTime = dayjs(`1970-01-01T${eventEndTime}`).format("h:mm A");
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const handleDeleteEvent = async () => {
+    try {
+      setDeleteLoading(true);
+      const BackendURL = import.meta.env.VITE_backendURL;
+      await axios.patch(`${BackendURL}/api/event/${_id}/delete`, {}, { withCredentials: true });
+
+      setDeleteDialogOpen(false);
+      // navigate("/dashboard");   // redirect after deletion, adjust route as needed
+      console.log("Event deleted successfully.");
+      window.location.reload();
+      } catch (error) {
+        console.log("Error while deleting event - ", error);
+      } finally {
+        setDeleteLoading(false);
+      }
+  };
 
 
   return (
@@ -82,13 +103,41 @@ function EventCard({
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup>
-                    <DropdownMenuItem variant="destructive">
+                    <DropdownMenuItem variant="destructive"
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
                       <TrashIcon />
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Delete Dialog */}
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogContent size="sm">
+                  <AlertDialogHeader>
+                    <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                      <Trash2Icon />
+                    </AlertDialogMedia>
+                    <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete <span className="font-semibold text-foreground">"{name}"</span>? 
+                      <br/>This will permanently remove all registrations and notify all participants. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel variant="outline">Cancel</AlertDialogCancel>
+                    <AlertDialogAction variant="destructive" disabled={deleteLoading}
+                      onClick={() => handleDeleteEvent()}>
+                      {deleteLoading ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           }
         </div>
