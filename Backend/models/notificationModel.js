@@ -13,17 +13,14 @@ const notificationSchema = mongoose.Schema({
     required: true 
   },
   eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
-  message: {type:String,require:true},
+  message: {type:String,required:true},
   status: { 
     type: String, 
     enum: ['unseen', 'seen'],
     default: 'unseen' 
   },
-  outcome:{ // for invitation type notification , to soft delete them
-    type:String,
-    enum:['pending','seen'],
-    default:'pending'
-  }
+  //for invitation type notification , to soft delete them
+  isArchived: { type: Boolean, default: false },
 },{timestamps:true,});
 
 

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import socket from "@/Socket/socket";
+import { Link } from "react-router-dom";
 
 
 dayjs.extend(relativeTime);
@@ -103,6 +104,23 @@ const NotificationItem = ({notification,setNotifications}) => {
     const displayTime = diffInHours < 24 ? createdAt.fromNow() : createdAt.format('MMM DD, YYYY, hh:mm A');
 
 
+    const markAsSeen = async () => {
+      try {
+        if (notification.status === 'seen') return;
+        const BackendURL = import.meta.env.VITE_backendURL;
+        await axios.post(`${BackendURL}/api/notification/${notification?._id}/seen`,
+            { status: "seen" },
+            { withCredentials: true }
+        );
+        setNotifications(prev => prev.map(n =>
+            n._id === notification._id ? { ...n, status: 'seen' } : n
+        ));
+      } catch (error) {
+        console.log("Error marking notification as seen - ", error);
+      }
+    }
+
+
     // sub admin invitation - accept
     const accept_subAdmin_Invitation = async ()=>{
         try {
@@ -173,15 +191,21 @@ const NotificationItem = ({notification,setNotifications}) => {
     }
 
 
-  return (
-    <div className="flex items-start justify-between gap-3">
-      {notification.type === "sub_admin_invitation" ? (
+  // Sender avatar 
+  const SenderAvatar = () => (
+    <div className="shrink-0 w-7 h-7 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-base text-white flex justify-center items-center overflow-hidden">
+      {notification.sender?.name?.charAt(0).toUpperCase()}
+    </div>
+  );
+
+
+  // for sub admin invitation notification
+  if(notification.type === "sub_admin_invitation")  {
+      return (
         <div className="min-w-0">
-          <div className="w-full flex ">
+          <Link to={`/event/${notification.eventId?._id}`} className="w-full flex ">
             <div className=" mr-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-base text-white flex justify-center items-center overflow-hidden">
-                {notification.sender.name && notification.sender.name.charAt(0).toUpperCase()}
-              </div>
+              <SenderAvatar />
             </div>
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-base text-gray-800 mr-2">
@@ -189,22 +213,23 @@ const NotificationItem = ({notification,setNotifications}) => {
               </span>
               {`invited you as a sub-admin for the event "${notification.eventId.name}".`}
             </p>
-          </div>
+          </Link>
           <div className="w-full mt-4 flex gap-6">
             <button onClick={reject_subAdmin_Invitation} className="outline-button flex-1 px-2 py-1">Reject</button>
             <button onClick={accept_subAdmin_Invitation} className="primary-button flex-1 px-2 py-1">Accept</button>
           </div>
           <p className="text-xs text-gray-500 mt-2">{displayTime}</p>
         </div>
-      ) 
-      :
-       notification.type === "admin_invitation" ? (
+      )
+  }
+
+  // for admin invitation (permission) notification
+  if(notification.type === "admin_invitation") {
+      return(
         <div className="min-w-0">
-          <div className="w-full flex ">
+          <Link to={`/event/${notification.eventId?._id}`} className="w-full flex ">
             <div className=" mr-2">
-              <div className="w-7 h-7 rounded-full bg-gradient-to-r from-[#C9514F] to-[#A94442] font-semibold text-base text-white flex justify-center items-center overflow-hidden">
-                {notification.sender.name && notification.sender.name.charAt(0).toUpperCase()}
-              </div>
+              <SenderAvatar />
             </div>
             <p className="text-sm text-gray-700">
               <span className="font-semibold text-base text-gray-800 mr-2">
@@ -212,7 +237,7 @@ const NotificationItem = ({notification,setNotifications}) => {
               </span>
               {`requested approval to host "${notification.eventId.name}".`}
             </p>
-          </div>
+          </Link>
           <div className="w-full mt-4 flex gap-6">
             <button onClick={reject_student_event} className="outline-button flex-1 px-2 py-1">Reject</button>
             <button onClick={approve_student_event} className="primary-button flex-1 px-2 py-1">Approve</button>
@@ -220,8 +245,61 @@ const NotificationItem = ({notification,setNotifications}) => {
           <p className="text-xs text-gray-500 mt-2">{displayTime}</p>
         </div>
       ) 
-      : (
-        <>
+  }
+
+
+  if (
+    [
+        'subAdmin_invitation_accepted',
+        'subAdmin_invitation_rejected',
+        'approved_student_event',
+        'rejected_student_event'
+    ].includes(notification.type)
+  ) {
+    const messageMap = {
+        subAdmin_invitation_accepted: `accepted your sub-admin invitation for "${notification.eventId?.name}".`,
+        subAdmin_invitation_rejected: `rejected your sub-admin invitation for "${notification.eventId?.name}".`,
+        approved_student_event: `approved your event "${notification.eventId?.name}".`,
+        rejected_student_event: `rejected your event "${notification.eventId?.name}".`
+    };
+
+    return (
+      <Link to={`/event/${notification.eventId?._id}`} onClick={markAsSeen}
+       className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+            <div className="w-full flex">
+                <div className="mr-2">
+                    <SenderAvatar />
+                </div>
+                <p className={`text-sm ${
+                    notification.status === "unseen"
+                      ? "font-semibold text-gray-900"
+                      : "text-gray-700"
+                  }`}
+                >
+                    <span className={`${ notification.status === "unseen"? "font-bold text-gray-900": "font-semibold text-gray-700"} text-base mr-2`}>
+                        {notification.sender.name}
+                    </span>
+                    {messageMap[notification.type]}
+                </p>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">{displayTime}</p>
+        </div>
+        {notification.status === "unseen" && (
+            <span className="shrink-0 mt-2 h-2.5 w-2.5 rounded-full bg-[#00A1A1]" />
+        )}
+      </Link>
+    );
+  }
+
+
+  const Wrapper = notification.type === 'event_updated'
+    ? ({ children }) => <Link to={`/event/${notification.eventId?._id}`} onClick={markAsSeen} className="flex items-start justify-between gap-3 hover:bg-gray-50 w-full">{children}</Link>
+    : ({ children }) => <div onClick={markAsSeen} className="flex items-start justify-between gap-3">{children}</div>;
+
+
+  return (
+    <Wrapper>
           <div className="min-w-0">
             <p
               className={`text-sm ${
@@ -237,8 +315,6 @@ const NotificationItem = ({notification,setNotifications}) => {
           {notification.status === "unseen" && (
             <span className="shrink-0 mt-2 h-2.5 w-2.5 rounded-full bg-[#00A1A1]" />
           )}
-        </>
-      )}
-    </div>
+    </Wrapper>
   );
 };

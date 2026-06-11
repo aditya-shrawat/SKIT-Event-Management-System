@@ -8,7 +8,7 @@ export const allRecivedNotifications = async (req, res) => {
       return res.status(403).json({ error: "You are not authrized." });
     }
 
-    const notifications = await Notification.find({ receiver: user._id,outcome:'pending' })  // only outcome==='pending notif. , bcs its for invitation notif. 
+    const notifications = await Notification.find({ receiver: user._id,isArchived: false })   
       .populate({ path: 'sender', select: 'name collegeId' }) 
       .populate({ path: 'receiver', select: 'name collegeId' }) 
       .populate({ path: 'eventId', select: 'name' }) 
@@ -38,7 +38,7 @@ export const updateNotificationStatus = async (req,res)=>{
         notification.status = status;
         // only for invitation type notification , to soft delete them
         if(notification.type==='sub_admin_invitation' || notification.type==='admin_invitation'){
-            notification.outcome = 'seen';
+            notification.isArchived = true;
         }
         await notification.save();
 

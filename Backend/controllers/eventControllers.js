@@ -428,7 +428,7 @@ export const sendSubAdminInvitations = async (io, newSubAdmins, updatedEvent, us
         eventId: updatedEvent._id,
         message: `You have been invited as a sub-admin for the event "${updatedEvent.name}".`,
         status: "unseen",
-        outcome: "pending",
+        isArchived: false,
     })));
 
     newSubAdmins.forEach(subAdminId => {
@@ -560,6 +560,12 @@ export const deleteEvent = async (req, res) => {
       ].map((id) => id.toString())) 
     ];
 
+    await Promise.all([
+      Registration.deleteMany({ eventId }),
+      Event.findByIdAndDelete(eventId),
+      Notification.deleteMany({ eventId })
+    ]);
+
     // notifications 
     if (allRecipientIds.length > 0) {
       const notifications = allRecipientIds.map((recipientId) => ({
@@ -569,16 +575,11 @@ export const deleteEvent = async (req, res) => {
         eventId,
         message: `The event "${event.name}" has been deleted by the admin.`,
         status: "unseen",
-        outcome: "pending",
+        isArchived: false,
       }));
 
       await Notification.insertMany(notifications);
     }
-
-    await Promise.all([
-      Registration.deleteMany({ eventId }),
-      Event.findByIdAndDelete(eventId),
-    ]);
 
     // real-time socket notifications
     const io = req.io;
