@@ -88,9 +88,9 @@ const MyEvents = () => {
                 {/* Stats */}
                 <div className="w-full md:w-auto">
                   <div className="bg-white/80 backdrop-blur-sm border border-[#00A1A1]/30 shadow-sm rounded-2xl">
-                    <div className="grid grid-cols-4 divide-x divide-[#00A1A1]/20">
+                    <div className="grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-[#00A1A1]/20 overflow-hidden rounded-2xl">
                       {/* Assigned as sub-admin */}
-                      <div className="p-4 md:p-5 flex items-center gap-3">
+                      <div className="p-4 md:p-5 flex items-center gap-3 border border-[#00A1A1]/20">
                         <div className="h-9 w-9 rounded-lg bg-[#00A1A1]/10 text-[#00A1A1] grid place-items-center">🏁</div>
                         <div>
                           <div className="text-xs text-gray-500">Assigned</div>
@@ -98,7 +98,7 @@ const MyEvents = () => {
                         </div>
                       </div>
                       {/* Approved */}
-                      <div className="p-4 md:p-5 flex items-center gap-3">
+                      <div className="p-4 md:p-5 flex items-center gap-3 border border-[#00A1A1]/20">
                         <div className="h-9 w-9 rounded-lg bg-green-500/10 text-green-600 grid place-items-center">✅</div>
                         <div>
                           <div className="text-xs text-gray-500">Approved</div>
@@ -106,7 +106,7 @@ const MyEvents = () => {
                         </div>
                       </div>
                       {/* Pending Approval */}
-                      <div className="p-4 md:p-5 flex items-center gap-3">
+                      <div className="p-4 md:p-5 flex items-center gap-3 border border-[#00A1A1]/20">
                         <div className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-600 grid place-items-center">⏳</div>
                         <div>
                           <div className="text-xs text-gray-500">Pending</div>
@@ -114,7 +114,7 @@ const MyEvents = () => {
                         </div>
                       </div>
                       {/* Rejected */}
-                      <div className="p-4 md:p-5 flex items-center gap-3">
+                      <div className="p-4 md:p-5 flex items-center gap-3 border border-[#00A1A1]/20">
                         <div className="h-9 w-9 rounded-lg bg-red-500/10 text-red-600 grid place-items-center text-sm">❌</div>
                         <div>
                           <div className="text-xs text-gray-500">Rejected</div>

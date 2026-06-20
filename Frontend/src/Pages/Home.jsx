@@ -4,7 +4,7 @@ import EventCard from "../Components/EventCard";
 import HeroSection from "../Components/HeroSection";
 import axios from "axios";
 import { Skeleton } from "@/Components/ui/skeleton";
-import { FaFilter } from "react-icons/fa";
+import { IoMdSearch } from "react-icons/io";
 
 
 const categories = [
@@ -114,14 +114,14 @@ const Home = () => {
                   ⊞
                 </button> */}
                 <button className="px-3 py-2 border-none bg-transparent cursor-pointer rounded-lg hover:bg-gray-100 transition-colors">
-                  <FaFilter className="text-lg text-gray-600" />
+                  <IoMdSearch  className="text-2xl text-gray-600" />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-3 mb-8">
+          <div className="flex gap-3 mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
             {categories.map((category) => (
               <span
                 key={category}
