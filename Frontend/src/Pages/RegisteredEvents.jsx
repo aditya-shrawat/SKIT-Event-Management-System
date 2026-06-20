@@ -49,18 +49,10 @@ const RegisteredEvents = () => {
             </div>
 
             {/* Stats */}
-            <div className="w-full md:w-auto">
+            {/* <div className="w-full md:w-auto">
               <div className="bg-white/80 backdrop-blur-sm border border-[#00A1A1]/30 shadow-sm rounded-2xl">
                 <div className="grid grid-cols-2 divide-x divide-[#00A1A1]/20">
-                  {/* Total */}
-                  {/* <div className="p-4 md:p-5 flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-lg bg-[#00A1A1]/10 text-[#00A1A1] grid place-items-center">📦</div>
-                    <div>
-                      <div className="text-xs text-gray-500">Total</div>
-                      <div className="mt-0.5 text-xl md:text-2xl font-semibold text-gray-900">{registeredEvents.length}</div>
-                    </div>
-                  </div> */}
-                  {/* Confirmed */}
+
                   <div className="p-4 md:p-5 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-green-500/10 text-green-600 grid place-items-center">✅</div>
                     <div>
@@ -70,7 +62,7 @@ const RegisteredEvents = () => {
                       </div>
                     </div>
                   </div>
-                  {/* Waitlisted */}
+
                   <div className="p-4 md:p-5 flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-amber-500/10 text-amber-600 grid place-items-center">⏳</div>
                     <div>
@@ -82,7 +74,7 @@ const RegisteredEvents = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

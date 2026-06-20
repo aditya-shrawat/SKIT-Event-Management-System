@@ -1,34 +1,35 @@
 import mongoose from 'mongoose'
 
 const UserSchema = mongoose.Schema({
+    auth0Id:   { 
+        type: String, required: true, unique: true 
+    },
     collegeId: {
         type: String,
         required: true,
         unique: true,
-        lowercase: true
+        uppercase: true,
+        trim: true
     },
     name: { 
         type: String, 
         required: true 
     },
     email:{
-        type:String,required:true,unique:true,lowercase: true 
+        type:String,required:true,unique:true,lowercase: true,trim: true 
     },
-    collegeName: {
-        type: String,
-        required: true,
-        default: "SKIT"
-    },
-    // semester: {
+    // collegeName: {
     //     type: String,
     //     required: true,
+    //     default: "SKIT"
     // },
-    password: {  
+    semester: {
         type: String,
-        required: true
+        required: function() { return this.role === 'student'; },
     },
     branch: {
         type: String,
+        enum: ["CSE", "IT", "ECE", "EE", "ME", "CE", "AI", "DS", "IOT"],
         required: true
     },
     role: {

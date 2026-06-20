@@ -12,28 +12,42 @@ export const UserProvider = ({children}) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchUserInfo = async()=>{
+        const fetchUserInfo = async () => {
             try {
                 const BackendURL = import.meta.env.VITE_backendURL;
-                const response = await axios.get(`${BackendURL}/api/user-info`, { withCredentials: true });
-
-                setUser(response.data.user)
-                console.log("User fetched successfully",response.data.user);
+                const response = await axios.get(`${BackendURL}/user/me`, {
+                    withCredentials: true
+                });
+                setUser(response.data);
+                console.log("User fetched successfully", response.data);
             } catch (error) {
-                console.error("User fetch error", error);
+                setUser(null);
+                if (error.response?.status !== 401) {
+                    console.error("User fetch error", error);
+                }
             } finally {
                 setLoading(false);
             }
         }
 
-        fetchUserInfo()
-    },[]);
+        fetchUserInfo();
+    }, []);
 
-  return (
-    <UserContext.Provider value={{user,setUser,loading}} >
-        {children}
-    </UserContext.Provider>
-  )
+    const authAxios = (config) => {
+        return axios({ ...config, withCredentials: true });
+    };
+
+    const logout = async () => {
+        const BackendURL = import.meta.env.VITE_backendURL;
+        await axios.post(`${BackendURL}/user/logout`, {}, { withCredentials: true });
+        setUser(null);
+    };
+
+    return (
+        <UserContext.Provider value={{ user, setUser, loading, authAxios, logout }}>
+            {children}
+        </UserContext.Provider>
+    )
 };
 
-export const useUser = ()=> useContext(UserContext);
+export const useUser = () => useContext(UserContext);

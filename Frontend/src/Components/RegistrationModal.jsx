@@ -136,13 +136,12 @@ const RegistrationModal = ({ event, getRegistrationStatus, onClose }) => {
                     />
                   </div>
                   <div> 
-                    {/* YET TO IMPLEMENT IN USER AUTH  */}
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Semester
                     </label>
                     <Input
                       type="text"
-                      value="PENDING"
+                      value={user?.semester || "N/A"}
                       readOnly
                       className="w-full"
                     />

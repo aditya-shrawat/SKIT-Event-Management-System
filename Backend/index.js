@@ -1,12 +1,13 @@
 import express from 'express';
 import http from "http"
 import dotenv from 'dotenv'
+dotenv.config();
+
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import userAuthRoutes from './routes/userAuth.js';
-import { fetchUserInfo } from './controllers/userInfo.js';
-import { checkTokenAuthentication } from './middleware/authMiddleware.js';
+import { attachUser, requireAuth } from './middleware/authMiddleware.js';
 import eventRoutes from './routes/eventRoutes.js'
 import searchRoutes from './routes/search.js'
 import { Server } from 'socket.io';
@@ -15,7 +16,7 @@ import { eventSocketHandler } from './sockets/eventSocketHandler.js';
 import homeRoutes from './routes/homeRoutes.js'
 
 
-dotenv.config();
+
 
 // database connection
 const mongoDB = process.env.MongoDB_URL;
@@ -59,7 +60,6 @@ app.use((req, res, next) => {
 });
 
 
-app.get("/api/user-info",checkTokenAuthentication,fetchUserInfo);
 app.use('/user',userAuthRoutes) ;
 app.use('/search',searchRoutes);
 app.use('/api/home',homeRoutes)

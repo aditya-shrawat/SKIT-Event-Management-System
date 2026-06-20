@@ -298,29 +298,17 @@ export const eventSocketHandler = (io, socket) => {
         const updatedEvent = await Event.findById(eventId).lean();
 
         const sendNotification = async (receiverId,approverId,approverName ) => {
-          // notification for accepter
-          if (receiverId?.toString() === approverId?.toString()){
-            await Notification.create({
-                sender: approverId, // the approver is the sender of this notification
-                receiver: receiverId,
-                type: "approved_student_event",
-                eventId,
-                message: `You approved the event "${
-                updatedEvent?.name ?? event.name
-                }".`,
-            });
-          }
-          else{
-            await Notification.create({
-                sender: approverId, // the approver is the sender of this notification
-                receiver: receiverId,
-                type: "approved_student_event",
-                eventId,
-                message: `${approverName} approved the event "${
-                updatedEvent?.name ?? event.name
-                }".`,
-            });
-          }
+          if (receiverId?.toString() === approverId?.toString()) return; // skip self
+
+          await Notification.create({
+            sender: approverId, // the approver is the sender of this notification
+            receiver: receiverId,
+            type: "approved_student_event",
+            eventId,
+            message: `${approverName} approved the event "${
+              updatedEvent?.name ?? event.name
+            }".`,
+          });
 
           io.to(`user_${receiverId?.toString?.()}`).emit("new_notification", {
             type: "approved_student_event",
@@ -333,8 +321,6 @@ export const eventSocketHandler = (io, socket) => {
 
         // notify sub-admin who requested event approval
         await sendNotification(updatedEvent.submittedBy, adminId, admin.name);
-        //notify admin
-        await sendNotification(updatedEvent.adminId, adminId, admin.name);
 
         socket.emit("approve_student_event:success", {
           eventId: eventId?.toString?.(),
@@ -444,8 +430,6 @@ export const eventSocketHandler = (io, socket) => {
 
         // notify student who requested event approval
         await sendNotification(updatedEvent.submittedBy, adminId, admin.name);
-        //notify admin
-        await sendNotification(updatedEvent.adminId, adminId, admin.name);
 
         socket.emit("reject_student_event:success", {
             eventId: eventId?.toString?.(),

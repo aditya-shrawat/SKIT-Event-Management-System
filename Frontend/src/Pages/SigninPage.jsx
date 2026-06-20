@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
+import { useUser } from '@/Context/UserContext';
 
 const SigninPage = () => {
   const [email, setEmail] = useState("");
@@ -20,40 +21,45 @@ const SigninPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useUser();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
 
     const BackendURL = import.meta.env.VITE_backendURL;
-    axios.post(
+
+    try {
+      await axios.post(
         `${BackendURL}/user/signin`,
-        {
-          email,
-          password,
-        },
+        { email, password },
         { withCredentials: true }
-    )
-    .then((response) => {
-        if (response.status === 200) {
-          navigate("/");
-        }
-    })
-    .catch((error) => {
-        if (error.response && error.response.data.error) {
-          setError(error.response.data.error);
-        } else {
-          setError("Something went wrong, please try again");
-        }
-    })
-    .finally(() => setIsLoading(false));
+      );
+
+      // fetch user and update context immediately
+      const res = await axios.get(`${BackendURL}/user/me`, {
+        withCredentials: true,
+      });
+      setUser(res.data);
+
+      navigate("/");
+
+    } catch (error) {
+      setError(error.response?.data?.error || "Something went wrong, please try again");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="w-full min-h-screen flex items-center justify-center p-4 bg-slate-50">
         <Card className="w-full max-w-sm">
           <CardHeader>
-            <CardTitle>Sign In</CardTitle>
+            <div className="flex items-center justify-center">
+              <img src="/logo.png" className="h-24 w-auto" />
+            </div>
+            <CardTitle className="text-3xl font-bold text-[#A94442]">Sign In</CardTitle>
             <CardDescription>
               Enter your email below to log in to your account
             </CardDescription>
@@ -68,7 +74,7 @@ const SigninPage = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     id="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="you@gmail.com"
                     required
                   />
                 </div>
@@ -105,8 +111,16 @@ const SigninPage = () => {
             {/* <Button variant="outline" className="w-full">
               Login with Google
             </Button> */}
-            <CardAction>
-              <Button variant="link" onClick={() => navigate("/signup")}>Sign Up</Button>
+            <CardAction className="w-full flex justify-center">
+              <p className="text-sm text-muted-foreground mt-2">
+                Don't have an account?{" "}
+                <span
+                  className="text-primary underline cursor-pointer underline-offset-4"
+                  onClick={() => navigate("/signup")}
+                >
+                  Sign Up
+                </span>
+              </p>
             </CardAction>
           </CardFooter>
         </Card>

@@ -1,5 +1,5 @@
 import React from 'react'
-import {createBrowserRouter, Navigate, RouterProvider} from 'react-router-dom'
+import {createBrowserRouter, RouterProvider} from 'react-router-dom'
 import Layout from './Components/Layout'
 import Home from './Pages/Home'
 import ErrorPage from './Pages/ErrorPage'
@@ -11,20 +11,7 @@ import SigninPage from './Pages/SigninPage'
 import CreateEventPage from './Pages/CreateEventPage'
 import EventRequests from './Pages/EventRequests'
 import EditEventPage from './Pages/EditEventPage'
-import { useUser } from "@/Context/UserContext";
-
-
-// Wrapper that checks if logged-in user is an admin role
-const AdminRoute = ({ children }) => {
-  const { user, loading } = useUser()
-
-  if (loading) return null
-
-  if (!user) return <Navigate to="/signin" replace />
-  if (user.role !== 'admin') return <Navigate to="*" replace />
-
-  return children
-}
+import ProtectedRoute from './Components/ProtectedRoute'
 
 
 const router = createBrowserRouter([
@@ -35,21 +22,22 @@ const router = createBrowserRouter([
     ),
     children:[
       {path:'/', element: <Home /> },
-      {path:'/myEvents', element: <MyEvents /> },
-      {path:'/registered', element: <RegisteredEvents /> },
-      {path:'/requests', element: <EventRequests /> },
       {path:'/event/:id', element: <EventDetailPage /> },
+
+      {path:'/myEvents', element: (<ProtectedRoute><MyEvents /></ProtectedRoute>) },
+      {path:'/registered', element: (<ProtectedRoute role="student"><RegisteredEvents /></ProtectedRoute>) },
+      {path:'/requests', element: (<ProtectedRoute role="admin"><EventRequests /></ProtectedRoute>) },
       {
         path: '/event/:id/edit',
         element: (
-          <AdminRoute>
+          <ProtectedRoute role="admin">
             <EditEventPage />
-          </AdminRoute>
+          </ProtectedRoute>
         )
       },
     ]
   },
-  {path:'/create-event', element: <CreateEventPage /> },
+  {path:'/create-event', element: (<ProtectedRoute><CreateEventPage /></ProtectedRoute>) },
   { path:'/signin', element:<SigninPage /> },
   { path:'/signup', element:<SignupPage /> },
   {

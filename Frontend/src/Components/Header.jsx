@@ -12,7 +12,7 @@ import { FaBell } from "react-icons/fa";
 import Notifications from "./Notifications";
 
 const Header = () => {
-  const {user} = useUser();
+  const {user, loading } = useUser();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
 
   useEffect(() => {
@@ -98,42 +98,45 @@ const Header = () => {
                 </div>
             </div>
           }
-
-          {
-            user ? (
+          {loading ? (
+              <div className="flex items-center gap-3">
+                <div className="h-6 w-6 bg-gray-200 rounded animate-pulse" />
+                <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              </div>
+            ) : user ? (
               <div className="flex items-center gap-4">
-                <div onClick={()=>{setIsNotificationsOpen(true)}} className="relative p-2 text-xl text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer">
+                <div
+                  onClick={() => setIsNotificationsOpen(true)}
+                  className="relative p-2 text-xl text-gray-700 hover:text-[#00A1A1] transition-colors cursor-pointer"
+                >
                   <FaBell />
                 </div>
                 <div className="relative">
                   <button className="h-8 w-8 rounded-full border-none bg-gradient-to-r from-[#C9514F] to-[#A94442] text-white font-semibold cursor-pointer">
-                    {user && user.name.charAt(0).toUpperCase()}
+                    {user.name.charAt(0).toUpperCase()}
                   </button>
                 </div>
               </div>
-            )
-            : (
+            ) : (
               <div className="flex items-center gap-4">
                 <div className="hidden sm:block">
-                  <Link to={'/signin'} className="px-3 py-1 text-[#00A1A1] border-2 border-[#00A1A1] rounded-md cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/10 transition-colors">
+                  <Link to="/signin" className="px-3 py-1 text-[#00A1A1] border-2 border-[#00A1A1] rounded-md cursor-pointer text-sm font-medium hover:bg-[#00A1A1]/10 transition-colors">
                     Sign In
                   </Link>
                 </div>
                 <div>
-                  <Link to={'/signup'} className="primary-button px-3 py-1.5 text-sm">
+                  <Link to="/signup" className="primary-button px-3 py-1.5 text-sm">
                     Sign Up
                   </Link>
                 </div>
               </div>
-            )
-          }
-
+            )}
         </div>
       </div>
     </nav>
 
     {
-      (isNotificationsOpen) &&
+      (isNotificationsOpen && user) &&
         <Notifications setIsNotificationsOpen={setIsNotificationsOpen}  />
     }
     </>
